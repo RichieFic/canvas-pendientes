@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Pendientes Tec",
+  "version": "1.0.0",
+  "description": "Todas tus entregas pendientes de Canvas en un solo panel, ordenadas por fecha límite.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://experiencia21.tec.mx/*",
+        "https://*.instructure.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
