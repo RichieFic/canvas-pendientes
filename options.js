@@ -34,8 +34,15 @@
   const basePreset = () => (CPT_PRESETS[settings.theme.preset] ? settings.theme.preset : "tec");
 
   function presetColors(key) {
-    const { label, ...colors } = CPT_PRESETS[key];
-    return colors;
+    return stripLabel(CPT_PRESETS[key]);
+  }
+
+  // Si el tema trae colores de gráfica propios, se aplican también.
+  function applyPresetChart(key) {
+    const chart = CPT_PRESETS[key].chart;
+    if (!chart) return;
+    settings.dashboard.chartColors = { ...chart };
+    renderChartColors();
   }
 
   // Se calcula comparando con el tema base (no depende de un flag guardado,
@@ -106,6 +113,7 @@
       settings.theme.preset = e.target.value;
       settings.theme.customized = false;
       Object.assign(settings.theme, presetColors(e.target.value));
+      applyPresetChart(e.target.value);
       renderTheme();
       save();
     });
@@ -120,6 +128,7 @@
     $("#theme-reset-preset").addEventListener("click", () => {
       settings.theme.preset = basePreset();
       Object.assign(settings.theme, presetColors(settings.theme.preset));
+      applyPresetChart(settings.theme.preset);
       settings.theme.customized = false;
       renderTheme();
       save();
