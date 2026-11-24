@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="top">
-    <h1>📋 Canvas Pendientes</h1>
+    <h1><span data-icon="clipboard"></span>Canvas Pendientes</h1>
     <p class="sub">Configuración · los cambios se guardan solos</p>
     <span id="saved" class="saved" aria-live="polite"></span>
   </header>
@@ -17,7 +17,7 @@
     <!-- Apariencia -->
     <section class="card">
       <div class="card-head">
-        <h2>🎨 Apariencia de Canvas</h2>
+        <h2><span data-icon="palette"></span>Apariencia de Canvas</h2>
         <label class="switch"><input type="checkbox" id="theme-enabled"><span></span></label>
       </div>
       <p class="hint">Cambia los colores y la letra de Canvas. Desactívalo para volver al aspecto original.</p>
@@ -37,6 +37,12 @@
           <label><input type="color" data-color="navText"> Íconos de la barra</label>
         </div>
 
+        <div class="icon-row">
+          <label class="icon-pick"><input type="color" id="icon-color"> Color de los íconos</label>
+          <label class="check"><input type="checkbox" id="icon-accent"> Igual al color de acento</label>
+          <span class="icon-sample" id="icon-sample" aria-hidden="true"></span>
+        </div>
+
         <div class="row">
           <label for="font-size">Tamaño de letra <output id="font-size-out"></output></label>
           <input type="range" id="font-size" min="80" max="150" step="5">
@@ -47,7 +53,7 @@
         </div>
 
         <div class="preview" id="preview" aria-label="Vista previa">
-          <div class="pv-nav"><span>☰</span><span>🏠</span><span>📚</span><span>📅</span></div>
+          <div class="pv-nav"><span data-icon="menu"></span><span data-icon="home"></span><span data-icon="book"></span><span data-icon="calendar"></span></div>
           <div class="pv-main">
             <div class="pv-title">Panel de control</div>
             <p class="pv-text">Así se verá el texto de Canvas con <a href="#" class="pv-link">un enlace</a>.</p>
@@ -69,7 +75,7 @@
     <!-- Dashboard -->
     <section class="card">
       <div class="card-head">
-        <h2>🏠 Pantalla principal</h2>
+        <h2><span data-icon="home"></span>Pantalla principal</h2>
         <label class="switch"><input type="checkbox" id="dash-enabled"><span></span></label>
       </div>
       <p class="hint">Agrega un resumen arriba de tus cursos en el panel de control de Canvas.</p>
@@ -113,7 +119,7 @@
 
     <!-- Calendario -->
     <section class="card">
-      <div class="card-head"><h2>📅 Calendario</h2></div>
+      <div class="card-head"><h2><span data-icon="calendar"></span>Calendario</h2></div>
       <p class="hint">Conecta tu calendario y tus entregas aparecerán en un calendario llamado
         <b>“Canvas Pendientes”</b>, con notificaciones. Se actualiza solo cuando abres Canvas y cada hora.</p>
 
@@ -167,7 +173,7 @@
 
     <!-- Avanzado -->
     <details class="card advanced">
-      <summary>⚙️ Avanzado (para quien publica la extensión)</summary>
+      <summary><span data-icon="wrench"></span>Avanzado (para quien publica la extensión)</summary>
       <p class="hint">Registra estas Redirect URIs en Google Cloud y en Microsoft Entra. Los Client IDs van en
         <code>config.js</code>; aquí puedes sobrescribirlos para pruebas en este navegador.</p>
       <div class="row">
@@ -195,6 +201,7 @@
 
   <script src="config.js"></script>
   <script src="settings.js"></script>
+  <script src="icons.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

@@ -53,6 +53,8 @@ const CPT_DEFAULTS = {
     // Colores de la gráfica y la barra de progreso
     chartColors: { ...CPT_PRESETS.contraste.chart },
   },
+  // Color de los íconos de la extensión (useAccent = igual al acento del tema)
+  icons: { useAccent: true, color: "#00e5ff" },
   calendar: {
     reminders: [1440, 60], eventMinutes: 30, autoSync: true,
     // Google: el día de la entrega, 5 avisos repartidos desde `fromHour` hasta la hora límite
@@ -87,6 +89,18 @@ async function cptGetSettings() {
 }
 
 const CPT_HEX = /^#[0-9a-f]{6}$/i;
+
+// Color final de los íconos y el color de contraste para dibujar encima.
+function cptIconColors(settings) {
+  const t = cptSanitizeTheme(settings.theme);
+  const ic = settings.icons || {};
+  const color = ic.useAccent || !CPT_HEX.test(ic.color || "")
+    ? (settings.theme.enabled ? t.accent : "#0039a6")
+    : ic.color;
+  const n = parseInt(color.slice(1), 16);
+  const lum = (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+  return { color, on: lum > 0.6 ? "#000000" : "#ffffff" };
+}
 function cptSanitizeTheme(t) {
   const d = CPT_DEFAULTS.theme;
   const out = { ...t };

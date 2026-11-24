@@ -16,10 +16,10 @@
     return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
   }
 
-  function column(titleText, extra) {
+  function column(iconName, titleText, extra) {
     const col = el("div", "cpt-dash-col");
     const head = el("div", "cpt-dash-head");
-    head.append(el("h3", null, titleText));
+    head.append(CPT.withIcon("h3", null, iconName, titleText));
     if (extra) head.append(extra);
     const list = el("div", "cpt-dash-list");
     list.append(el("p", "cpt-empty", "Cargando…"));
@@ -69,7 +69,7 @@
       countEl.textContent = items.length ? `Ver todas (${items.length})` : "";
       countEl.hidden = !items.length;
       if (!shown.length) {
-        list.append(el("p", "cpt-empty", `🎉 Nada pendiente en los próximos ${days} días.`));
+        list.append(CPT.withIcon("p", "cpt-empty", "smile", `Nada pendiente en los próximos ${days} días.`));
         return;
       }
       for (const it of shown.slice(0, MAX_UPCOMING)) {
@@ -106,7 +106,7 @@
 
     const top = el("div", "cpt-prog-top");
     if (!total) {
-      top.append(el("span", "cpt-prog-pct", "🎉"), el("span", "cpt-prog-label", "No tienes entregas para hoy."));
+      top.append(CPT.withIcon("span", "cpt-prog-label", "smile", "No tienes entregas para hoy."));
       box.append(top);
       return box;
     }
@@ -130,7 +130,9 @@
       const li = el("li", it.done ? "cpt-done" : it.due < new Date() ? "cpt-late" : "");
       const a = el("a", null, it.title);
       a.href = it.url || "#";
-      li.append(el("span", "cpt-check", it.done ? "✓" : "○"), a, el("span", "cpt-time", timeFmt.format(it.due)));
+      const check = el("span", "cpt-check");
+      if (it.done) check.append(CPT.icon("check"));
+      li.append(check, a, el("span", "cpt-time", timeFmt.format(it.due)));
       list.append(li);
     }
     box.append(top, bar, list);
@@ -324,7 +326,12 @@
         if (ongoing) title.prepend(el("span", "cpt-type", "Ahora"), document.createTextNode(" "));
         body.append(title);
         const meta = [ev.location, ev.canvas || ev.primary ? "" : ev.calendar].filter(Boolean).join(" · ");
-        if (meta) body.append(el("div", "cpt-course", meta));
+        if (meta) {
+          const m = el("div", "cpt-course");
+          if (ev.location) m.append(CPT.icon("pin", "cpt-ic-sm"));
+          m.append(document.createTextNode(meta));
+          body.append(m);
+        }
         a.title = ev.calendar;
         a.append(when, body);
         sec.append(a);
@@ -339,7 +346,12 @@
     const hex = /^#[0-9a-f]{6}$/i;
     const def = CPT_DEFAULTS.dashboard.chartColors;
     for (const k of ["done", "pending", "late"]) {
-      widget.style.setProperty(`--cpt-chart-${k}`, c && hex.test(c[k] || "") ? c[k] : def[k]);
+      const v = c && hex.test(c[k] || "") ? c[k] : def[k];
+      widget.style.setProperty(`--cpt-chart-${k}`, v);
+      // Color legible encima (p. ej. la palomita sobre "completadas" blanco)
+      const n = parseInt(v.slice(1), 16);
+      const lum = (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
+      widget.style.setProperty(`--cpt-chart-${k}-on`, lum > 0.6 ? "#000000" : "#ffffff");
     }
   }
 
@@ -369,7 +381,7 @@
     } catch { /* contexto invalidado */ }
 
     if (s.progress) {
-      const { col, list } = column("✅ Progreso de hoy");
+      const { col, list } = column("progress", "Progreso de hoy");
       col.classList.add("cpt-progress");
       list.className = "cpt-prog-body";
       widget.append(col);
@@ -382,13 +394,13 @@
     widget.append(row);
 
     if (s.agenda) {
-      const { col, list } = column("📅 Mi agenda");
+      const { col, list } = column("calendar", "Mi agenda");
       col.classList.add("cpt-agenda");
       row.append(col);
       fillAgenda(list, Math.min(14, Math.max(1, s.agendaDays)));
     }
     if (s.announcements) {
-      const { col, list } = column("📢 Últimos anuncios");
+      const { col, list } = column("megaphone", "Últimos anuncios");
       row.append(col);
       fillAnnouncements(list, Math.min(20, Math.max(1, s.annCount)));
     }
@@ -397,7 +409,7 @@
       all.type = "button";
       all.hidden = true;
       all.addEventListener("click", () => CPT.openPanel && CPT.openPanel());
-      const { col, list } = column("⏰ Próximas entregas", all);
+      const { col, list } = column("clock", "Próximas entregas", all);
       row.append(col);
       fillUpcoming(list, Math.min(60, Math.max(1, s.upcomingDays)), all);
     }

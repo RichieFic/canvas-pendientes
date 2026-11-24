@@ -32,7 +32,7 @@
         "https://experiencia21.tec.mx/*",
         "https://*.instructure.com/*"
       ],
-      "js": ["canvas-api.js", "content.js", "dashboard.js"],
+      "js": ["icons.js", "canvas-api.js", "content.js", "dashboard.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }

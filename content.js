@@ -39,17 +39,20 @@
   const btn = el("button", "cpt-btn");
   btn.type = "button";
   btn.title = "Pendientes de Canvas";
-  btn.append(el("span", null, "📋"), el("span", "cpt-badge"));
+  btn.append(CPT.icon("clipboard", "cpt-ic-btn"), el("span", "cpt-badge"));
 
   const panel = el("div", "cpt-panel");
   panel.hidden = true;
   const header = el("div", "cpt-header");
-  const title = el("strong", null, "Pendientes");
-  const refresh = el("button", "cpt-icon", "⟳");
+  const title = CPT.withIcon("strong", null, "clipboard", "Pendientes");
+  const refresh = el("button", "cpt-icon");
+  refresh.append(CPT.icon("refresh"));
   refresh.title = "Actualizar";
-  const gear = el("button", "cpt-icon", "⚙");
+  const gear = el("button", "cpt-icon");
+  gear.append(CPT.icon("sliders"));
   gear.title = "Configuración (colores, calendario…)";
-  const close = el("button", "cpt-icon", "✕");
+  const close = el("button", "cpt-icon");
+  close.append(CPT.icon("close"));
   close.title = "Cerrar";
   for (const b of [refresh, gear, close]) b.type = "button";
   header.append(title, refresh, gear, close);
@@ -71,7 +74,7 @@
   function render(items) {
     body.replaceChildren();
     if (!items.length) {
-      body.append(el("p", "cpt-empty", "🎉 No tienes pendientes. Disfruta."));
+      body.append(CPT.withIcon("p", "cpt-empty", "smile", "No tienes pendientes. Disfruta."));
       return;
     }
     const groups = {};
@@ -112,24 +115,25 @@
       .filter((x) => x.s && x.s.connected);
 
     const info = el("span");
+    const setInfo = (name, text) => info.replaceChildren(CPT.icon(name), document.createTextNode(text));
     const link = el("button", "cpt-link");
     link.type = "button";
     link.addEventListener("click", openOptions);
 
     if (!connected.length) {
-      info.textContent = "📅 Lleva tus entregas a tu calendario";
+      setInfo("calendar", "Lleva tus entregas a tu calendario");
       link.textContent = "Conectar";
     } else {
       const bad = connected.find((x) => x.s.lastError);
       if (bad) {
-        info.textContent = `⚠ ${PROVIDER_LABEL[bad.p]}: ${bad.s.lastError}`;
+        setInfo("alert", `${PROVIDER_LABEL[bad.p]}: ${bad.s.lastError}`);
         info.className = "cpt-warn";
         info.title = bad.s.lastError;
         link.textContent = "Revisar";
       } else {
         const names = connected.map((x) => PROVIDER_LABEL[x.p]).join(" y ");
         const last = Math.max(...connected.map((x) => x.s.lastSync || 0));
-        info.textContent = `📅 ${names}${last ? ` · sincronizado ${relative(new Date(last))}` : ""}`;
+        setInfo("calendar", `${names}${last ? ` · sincronizado ${relative(new Date(last))}` : ""}`);
         link.textContent = "Ajustes";
       }
     }

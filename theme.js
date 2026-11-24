@@ -253,8 +253,21 @@ ${ff ? `body, #content :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label, a, butt
     (document.head || document.documentElement).append(hideEl);
   }
 
+  // ---------- Color de los íconos ----------
+  let iconEl = null;
+  function applyIcons(settings) {
+    const { color, on } = cptIconColors(settings);
+    if (!iconEl) {
+      iconEl = document.createElement("style");
+      iconEl.id = "cpt-icon-color";
+    }
+    iconEl.textContent = `:root { --cpt-icon: ${color}; --cpt-icon-on: ${on}; }`;
+    (document.head || document.documentElement).append(iconEl);
+  }
+
   function apply(settings) {
     applyHidden(settings.dashboard);
+    applyIcons(settings);
     const t = settings.theme;
     if (!t || !t.enabled) {
       if (styleEl) styleEl.remove();

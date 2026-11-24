@@ -12,7 +12,7 @@
     saveTimer = setTimeout(async () => {
       await chrome.storage.sync.set({ settings });
       const s = $("#saved");
-      s.textContent = "✓ Guardado";
+      s.replaceChildren(CPT.icon("check"), document.createTextNode("Guardado"));
       s.classList.add("show");
       setTimeout(() => s.classList.remove("show"), 1200);
     }, 250);
@@ -91,6 +91,7 @@
   }
 
   function renderPreview() {
+    renderIcons(); // si usan el acento, cambian junto con el tema
     const t = cptSanitizeTheme(settings.theme);
     const pv = $("#preview");
     for (const k of ["bg", "text", "accent", "card", "nav", "navText"]) pv.style.setProperty(`--pv-${k}`, t[k]);
@@ -147,6 +148,33 @@
     $("#theme-reset").addEventListener("click", () => {
       settings.theme = { ...CPT_DEFAULTS.theme, enabled: settings.theme.enabled };
       renderTheme();
+      save();
+    });
+  }
+
+  // ---------- Íconos ----------
+  function renderIcons() {
+    const { color } = cptIconColors(settings);
+    document.documentElement.style.setProperty("--icon", color);
+    $("#icon-accent").checked = settings.icons.useAccent;
+    $("#icon-color").value = color;
+    $("#icon-color").disabled = settings.icons.useAccent;
+  }
+
+  function initIcons() {
+    for (const e of $$("[data-icon]")) e.replaceWith(CPT.icon(e.dataset.icon));
+    const sample = $("#icon-sample");
+    for (const n of ["clipboard", "calendar", "megaphone", "clock", "pin", "progress"]) sample.append(CPT.icon(n));
+    $("#icon-accent").addEventListener("change", (e) => {
+      settings.icons.useAccent = e.target.checked;
+      if (!e.target.checked) settings.icons.color = cptIconColors({ ...settings, icons: { useAccent: true } }).color;
+      renderIcons();
+      save();
+    });
+    $("#icon-color").addEventListener("input", (e) => {
+      settings.icons.useAccent = false;
+      settings.icons.color = e.target.value;
+      renderIcons();
       save();
     });
   }
@@ -326,7 +354,7 @@
       const who = s.email ? `Conectado como ${s.email}.` : "Conectado.";
       if (s.lastError) {
         line.classList.add("err");
-        line.textContent = `${who} ⚠ ${s.lastError}`;
+        line.replaceChildren(document.createTextNode(`${who} `), CPT.icon("alert"), document.createTextNode(s.lastError));
       } else if (s.lastSync) {
         line.classList.add("ok");
         const r = s.lastResult || {};
@@ -381,6 +409,7 @@
   async function init() {
     settings = await cptGetSettings();
     guessPreset();
+    initIcons();
     initTheme();
     initDash();
     initChartColors();
