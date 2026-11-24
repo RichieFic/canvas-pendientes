@@ -6,6 +6,8 @@ const CPT_PRESETS = {
   oscuro: { label: "Oscuro",      bg: "#121418", text: "#e6e8eb", accent: "#6ea8ff", card: "#1c1f26", nav: "#0b0d10", navText: "#e6e8eb" },
   sepia:  { label: "Sepia",       bg: "#f4ecd8", text: "#3b2f1e", accent: "#8a4b08", card: "#fbf6ea", nav: "#5b4636", navText: "#f4ecd8" },
   bosque: { label: "Bosque",      bg: "#eef4ef", text: "#1d2b22", accent: "#1f7a4d", card: "#ffffff", nav: "#1f4d35", navText: "#ffffff" },
+  // Fondo gris, texto blanco, detalles cian y barra lateral blanca
+  contraste: { label: "Contraste", bg: "#2f343b", text: "#ffffff", accent: "#00e5ff", card: "#3b4149", nav: "#ffffff", navText: "#000000" },
 };
 
 const CPT_FONTS = {
