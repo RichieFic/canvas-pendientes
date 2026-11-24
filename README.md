@@ -7,7 +7,7 @@ Extensión de Chrome/Edge para Canvas (Experiencia21 del Tec y cualquier `*.inst
 - **Panel de pendientes**: botón flotante con todas tus entregas, agrupadas en Atrasadas, Hoy, Mañana, Esta semana y Después, con un contador de las urgentes.
 - **Pantalla principal**: un resumen arriba de tus cursos con los **últimos anuncios** (los no leídos llevan un punto) y tus **próximas entregas**.
 - **Calendario**: conecta **Google Calendar** u **Outlook / Microsoft 365**. La extensión crea un calendario llamado **“Canvas Pendientes”** con un evento por entrega, que termina a la hora límite, y con los recordatorios que elijas. Cuando entregas algo, su evento se borra solo.
-- **Apariencia**: colores de fondo, texto, enlaces, tarjetas y barra lateral, además del tamaño y tipo de letra. Incluye temas listos (Tec, Oscuro, Sepia y Bosque) y vista previa en vivo.
+- **Apariencia**: colores de fondo, texto, enlaces, tarjetas y barra lateral, además del tamaño y tipo de letra. Incluye temas listos (**Contraste**, que viene activado por defecto, Tec, Oscuro, Sepia y Bosque), vista previa en vivo, colores propios para la gráfica y un botón para volver a los colores originales del tema elegido.
 
 Todo se configura desde la página de opciones: clic en el ícono de la extensión, o en ⚙ dentro del panel.
 

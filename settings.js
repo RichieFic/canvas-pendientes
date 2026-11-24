@@ -44,12 +44,13 @@ const CPT_REMINDER_OPTIONS = [
 
 const CPT_DEFAULTS = {
   // preset = tema base elegido; customized = el usuario cambió algún color a mano
-  theme: { enabled: false, preset: "tec", customized: false, ...stripLabel(CPT_PRESETS.tec), fontSize: 100, fontFamily: "" },
+  // Usuarios nuevos empiezan con el tema Contraste activado.
+  theme: { enabled: true, preset: "contraste", customized: false, ...stripLabel(CPT_PRESETS.contraste), fontSize: 100, fontFamily: "" },
   dashboard: {
     enabled: true, progress: true, announcements: true, upcoming: true, annCount: 5, upcomingDays: 7,
     hideWidgets: ["people-widget"],
     // Colores de la gráfica y la barra de progreso
-    chartColors: { done: "#1f9d55", pending: "#3d8bfd", late: "#e5484d" },
+    chartColors: { ...CPT_PRESETS.contraste.chart },
   },
   calendar: { reminders: [1440, 60], eventMinutes: 30, autoSync: true },
 };
