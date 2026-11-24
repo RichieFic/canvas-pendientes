@@ -102,8 +102,9 @@ html, body, #application, #wrapper, #main, #not_right_side,
   fill: ${t.navText} !important;
 }
 .ic-app-header__logomark-container { background-color: ${t.nav} !important; }
-${navLight ? `/* Barra clara: el logo (blanco) se pinta del color de los íconos */
-.ic-app-header__logomark { filter: brightness(0)${lum(hexRgb(t.navText)) > 0.5 ? " invert(1)" : ""} !important; }` : ""}
+${navLight ? `/* Barra clara: las imágenes blancas (logo del Tec, TECgpt) se pintan del
+   color de los íconos. TECbot y la foto de perfil son a color: no se tocan. */
+.ic-app-header__logomark, #tecgpt-button img { filter: brightness(0)${lum(hexRgb(t.navText)) > 0.5 ? " invert(1)" : ""} !important; }` : ""}
 
 /* Tipografía */
 #content, #right-side, #left-side, .ic-app-nav-toggle-and-crumbs {
