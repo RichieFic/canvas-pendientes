@@ -209,6 +209,130 @@
     }
   }
 
+  // ---------- Mi agenda (Google Calendar) ----------
+  const agendaDayFmt = new Intl.DateTimeFormat("es-MX", { weekday: "long", day: "numeric", month: "short" });
+  const agendaTimeFmt = new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit" });
+
+  function send(msg) {
+    try {
+      return chrome.runtime.sendMessage(msg);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  // "2026-11-25" (todo el día) se interpreta como fecha local, no UTC.
+  function parseWhen(v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(v);
+  }
+
+  function dayLabel(d) {
+    const today = dayStart(new Date()).getTime();
+    const diff = Math.round((dayStart(d).getTime() - today) / 864e5);
+    if (diff === 0) return "Hoy";
+    if (diff === 1) return "Mañana";
+    const s = agendaDayFmt.format(d);
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function agendaMessage(list, text, buttonText, onClick) {
+    list.replaceChildren(el("p", "cpt-empty", text));
+    if (buttonText) {
+      const b = el("button", "cpt-link cpt-center", buttonText);
+      b.type = "button";
+      b.addEventListener("click", onClick);
+      list.append(b);
+    }
+  }
+
+  async function fillAgenda(list, days) {
+    list.replaceChildren(el("p", "cpt-empty", "Cargando…"));
+    let r;
+    try {
+      r = await send({ type: "agenda", days });
+    } catch (e) {
+      r = { ok: false, error: e.message };
+    }
+    if (!r || !r.ok) {
+      if (r && r.reason === "connect") {
+        agendaMessage(list, "Conecta Google Calendar para ver aquí tus clases y eventos.", "Abrir ajustes", () =>
+          send({ type: "openOptions" }).catch(() => {})
+        );
+      } else if (r && r.reason === "permission") {
+        agendaMessage(
+          list,
+          "Para mostrar tu agenda falta un permiso de solo lectura de Google Calendar.",
+          "Dar permiso",
+          async () => {
+            list.replaceChildren(el("p", "cpt-empty", "Esperando a Google…"));
+            const res = await send({ type: "connect", provider: "google" }).catch((e) => ({ ok: false, error: e.message }));
+            if (res && res.ok === false && res.error) agendaMessage(list, res.error);
+            else fillAgenda(list, days);
+          }
+        );
+      } else {
+        agendaMessage(list, `No se pudo cargar tu agenda: ${(r && r.error) || "error desconocido"}`);
+      }
+      return;
+    }
+
+    const now = new Date();
+    const today = dayStart(now);
+    const groups = new Map();
+    for (const ev of r.events) {
+      const start = parseWhen(ev.start);
+      const end = ev.end ? parseWhen(ev.end) : start;
+      if (isNaN(start)) continue;
+      // Eventos de varios días que ya empezaron: se muestran hoy.
+      const day = start < today ? today : dayStart(start);
+      const k = day.getTime();
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push({ ...ev, startD: start, endD: end });
+    }
+
+    list.replaceChildren();
+    if (!groups.size) {
+      list.append(el("p", "cpt-empty", `No tienes eventos en los próximos ${days} días.`));
+      return;
+    }
+    for (const k of [...groups.keys()].sort((a, b) => a - b)) {
+      const sec = el("div", "cpt-agenda-day");
+      sec.append(el("h4", "cpt-gtitle", dayLabel(new Date(k))));
+      // Primero los de todo el día, luego por hora real (no por texto: las
+      // fechas pueden venir con zonas horarias distintas).
+      const dayEvents = groups.get(k).sort((a, b) => (b.allDay - a.allDay) || (a.startD - b.startD));
+      for (const ev of dayEvents) {
+        const a = el("a", "cpt-agenda-item");
+        if (ev.link) {
+          a.href = ev.link;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+        }
+        if (ev.color) a.style.setProperty("--cpt-cal", ev.color);
+        const ongoing = !ev.allDay && ev.startD <= now && now < ev.endD;
+        if (!ev.allDay && ev.endD <= now) a.classList.add("cpt-past");
+        if (ongoing) a.classList.add("cpt-now");
+
+        const when = el(
+          "div",
+          "cpt-agenda-time",
+          ev.allDay ? "Todo el día" : `${agendaTimeFmt.format(ev.startD)} – ${agendaTimeFmt.format(ev.endD)}`
+        );
+        const body = el("div", "cpt-agenda-body");
+        const title = el("div", "cpt-title", ev.title);
+        if (ongoing) title.prepend(el("span", "cpt-type", "Ahora"), document.createTextNode(" "));
+        body.append(title);
+        const meta = [ev.location, ev.canvas || ev.primary ? "" : ev.calendar].filter(Boolean).join(" · ");
+        if (meta) body.append(el("div", "cpt-course", meta));
+        a.title = ev.calendar;
+        a.append(when, body);
+        sec.append(a);
+      }
+      list.append(sec);
+    }
+  }
+
   // Colores de la gráfica como variables CSS (se actualizan en vivo).
   function applyChartColors(c) {
     if (!widget) return;
@@ -231,7 +355,7 @@
 
   async function init() {
     const s = (await cptGetSettings()).dashboard;
-    if (!s.enabled || (!s.progress && !s.announcements && !s.upcoming)) return;
+    if (!s.enabled || (!s.progress && !s.agenda && !s.announcements && !s.upcoming)) return;
 
     widget = el("section", "cpt-dash");
     widget.setAttribute("aria-label", "Resumen de Canvas Pendientes");
@@ -257,6 +381,12 @@
     const row = el("div", "cpt-dash-row");
     widget.append(row);
 
+    if (s.agenda) {
+      const { col, list } = column("📅 Mi agenda");
+      col.classList.add("cpt-agenda");
+      row.append(col);
+      fillAgenda(list, Math.min(14, Math.max(1, s.agendaDays)));
+    }
     if (s.announcements) {
       const { col, list } = column("📢 Últimos anuncios");
       row.append(col);

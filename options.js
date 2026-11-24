@@ -157,6 +157,8 @@
     $("#dash-enabled").checked = d.enabled;
     $("#dash-body").classList.toggle("disabled", !d.enabled);
     $("#dash-progress").checked = d.progress;
+    $("#dash-agenda").checked = d.agenda;
+    $("#dash-agenda-days").value = d.agendaDays;
     for (const cb of $$("#hide-widgets input")) cb.checked = d.hideWidgets.includes(cb.value);
     $("#dash-ann").checked = d.announcements;
     $("#dash-ann-count").value = d.annCount;
@@ -219,6 +221,8 @@
     const num = (min, max) => (t) => Math.min(max, Math.max(min, Math.round(Number(t.value)) || min));
     bind("#dash-enabled", "enabled", (t) => t.checked);
     bind("#dash-progress", "progress", (t) => t.checked);
+    bind("#dash-agenda", "agenda", (t) => t.checked);
+    bind("#dash-agenda-days", "agendaDays", num(1, 14));
 
     const box = $("#hide-widgets");
     for (const w of CPT_CANVAS_WIDGETS) {

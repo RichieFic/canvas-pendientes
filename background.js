@@ -43,17 +43,24 @@ class CalError extends Error {
 // ---------------------------------------------------------------------------
 // OAuth
 // ---------------------------------------------------------------------------
+// Google: la sincronización solo necesita `calendar.app.created`; "Mi agenda"
+// además pide `calendar.readonly` (solo lectura) al conectar. La renovación
+// silenciosa repite los permisos que se pidieron la última vez, para no
+// romper la sincronización de quien aún no ha aceptado el permiso nuevo.
+const GOOGLE_SCOPES_BASE = "email https://www.googleapis.com/auth/calendar.app.created";
+const GOOGLE_SCOPES_FULL = `${GOOGLE_SCOPES_BASE} https://www.googleapis.com/auth/calendar.readonly`;
+
 const AUTH = {
   google: {
     label: "Google",
     configKey: "GOOGLE_CLIENT_ID",
     devKey: "googleClientId",
-    url({ clientId, redirect, state, interactive, hint }) {
+    url({ clientId, redirect, state, interactive, hint, scope }) {
       const q = new URLSearchParams({
         client_id: clientId,
         response_type: "token",
         redirect_uri: redirect,
-        scope: "email https://www.googleapis.com/auth/calendar.app.created",
+        scope: scope || GOOGLE_SCOPES_BASE,
         include_granted_scopes: "true",
         state,
       });
@@ -122,12 +129,14 @@ async function getToken(p, { interactive = false } = {}) {
   }
   const status = await getStatus(p);
   const state = crypto.randomUUID();
+  const scope = p === "google" ? (interactive ? GOOGLE_SCOPES_FULL : (auth && auth.scope) || GOOGLE_SCOPES_BASE) : "";
   const url = AUTH[p].url({
     clientId,
     redirect: chrome.identity.getRedirectURL(p),
     state,
     interactive,
     hint: status.email || "",
+    scope,
   });
 
   let redirect;
@@ -152,7 +161,14 @@ async function getToken(p, { interactive = false } = {}) {
   const token = params.get("access_token");
   if (!token) throw new CalError(`${AUTH[p].label} no devolvió un token.`);
   const expiresIn = Number(params.get("expires_in")) || 3600;
-  await local.set({ [key]: { token, expiresAt: Date.now() + expiresIn * 1000 } });
+  await local.set({
+    [key]: {
+      token,
+      expiresAt: Date.now() + expiresIn * 1000,
+      scope, // lo que se pidió (se repite al renovar)
+      granted: params.get("scope") || scope, // lo que el usuario aceptó
+    },
+  });
   return token;
 }
 
@@ -175,7 +191,9 @@ async function api(p, method, path, body, retry = true) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (r.status === 401 && retry) {
-    await local.remove(`auth_${p}`);
+    // Token vencido: forzar renovación conservando los permisos pedidos.
+    const auth = await getLocal(`auth_${p}`, null);
+    if (auth) await local.set({ [`auth_${p}`]: { ...auth, expiresAt: 0 } });
     return api(p, method, path, body, false);
   }
   if (r.status === 204) return null;
@@ -411,6 +429,7 @@ async function onItems(msg) {
 }
 
 async function connect(p) {
+  agendaCache = { at: 0, days: 0, data: null };
   await getToken(p, { interactive: true });
   const token = await getToken(p);
   const email = await AUTH[p].email(token).catch(() => "");
@@ -437,6 +456,74 @@ async function refreshFromCanvas() {
 }
 
 // ---------------------------------------------------------------------------
+// "Mi agenda": eventos de todos los calendarios de Google (solo lectura)
+// ---------------------------------------------------------------------------
+const HEX = /^#[0-9a-f]{6}$/i;
+let agendaCache = { at: 0, days: 0, data: null };
+
+function hasAgendaPermission(auth) {
+  return !!(auth && /calendar\.readonly/.test(auth.granted || ""));
+}
+
+async function loadAgenda(days) {
+  const status = await getStatus("google");
+  if (!status.connected) return { ok: false, reason: "connect" };
+  const auth = await getLocal("auth_google", null);
+  if (!hasAgendaPermission(auth)) return { ok: false, reason: "permission" };
+  if (agendaCache.data && agendaCache.days === days && Date.now() - agendaCache.at < 3 * 60_000) {
+    return { ok: true, events: agendaCache.data };
+  }
+
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+  const { calendarId: canvasCal } = await getCalState("google");
+
+  let list;
+  try {
+    list = await api("google", "GET", "/users/me/calendarList?minAccessRole=reader&maxResults=100");
+  } catch (e) {
+    if (e.status === 403) return { ok: false, reason: "permission" };
+    throw e;
+  }
+  // Solo los calendarios que tienes visibles en Google Calendar
+  const cals = (list.items || []).filter((c) => c.selected && !c.hidden);
+  const range = `timeMin=${enc(start.toISOString())}&timeMax=${enc(end.toISOString())}`;
+
+  const perCal = await Promise.all(
+    cals.map((c) =>
+      api("google", "GET", `/calendars/${enc(c.id)}/events?singleEvents=true&orderBy=startTime&maxResults=100&${range}`)
+        .then((r) =>
+          (r.items || [])
+            .filter((e) => e.status !== "cancelled")
+            .filter((e) => !(e.attendees || []).some((a) => a.self && a.responseStatus === "declined"))
+            .map((e) => ({
+              title: e.summary || "(sin título)",
+              location: e.location || "",
+              link: /^https:\/\//.test(e.htmlLink || "") ? e.htmlLink : "",
+              allDay: !!(e.start && e.start.date),
+              start: (e.start && (e.start.dateTime || e.start.date)) || "",
+              end: (e.end && (e.end.dateTime || e.end.date)) || "",
+              color: HEX.test(c.backgroundColor || "") ? c.backgroundColor : "",
+              calendar: c.summaryOverride || c.summary || "",
+              canvas: c.id === canvasCal,
+              primary: !!c.primary,
+            }))
+        )
+        .catch(() => [])
+    )
+  );
+  const events = perCal
+    .flat()
+    .filter((e) => e.start)
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 80);
+  agendaCache = { at: Date.now(), days, data: events };
+  return { ok: true, events };
+}
+
+// ---------------------------------------------------------------------------
 // Eventos de Chrome
 // ---------------------------------------------------------------------------
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -458,6 +545,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return p ? reply(disconnect(p)) : false;
     case "syncNow":
       return reply(runSync());
+    case "agenda":
+      return reply(loadAgenda(Math.min(14, Math.max(1, Math.round(Number(msg.days)) || 3))));
     case "openOptions":
       chrome.runtime.openOptionsPage();
       return false;

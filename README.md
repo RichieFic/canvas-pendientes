@@ -5,6 +5,7 @@ Extensión de Chrome/Edge para Canvas (Experiencia21 del Tec y cualquier `*.inst
 ## Funciones
 
 - **Panel de pendientes**: botón flotante con todas tus entregas, agrupadas en Atrasadas, Hoy, Mañana, Esta semana y Después, con un contador de las urgentes.
+- **Mi agenda**: en el tablero, tus clases y eventos de Google Calendar de los próximos días (solo lectura), con el evento en curso resaltado.
 - **Pantalla principal**: un resumen arriba de tus cursos con los **últimos anuncios** (los no leídos llevan un punto) y tus **próximas entregas**.
 - **Calendario**: conecta **Google Calendar** u **Outlook / Microsoft 365**. La extensión crea un calendario llamado **“Canvas Pendientes”** con un evento por entrega, que termina a la hora límite, y con los recordatorios que elijas. Cuando entregas algo, su evento se borra solo.
 - **Apariencia**: colores de fondo, texto, enlaces, tarjetas y barra lateral, además del tamaño y tipo de letra. Incluye temas listos (**Contraste**, que viene activado por defecto, Tec, Oscuro, Sepia y Bosque), vista previa en vivo, colores propios para la gráfica y un botón para volver a los colores originales del tema elegido.
@@ -32,14 +33,14 @@ Las Redirect URIs dependen del ID de la extensión: `https://<ID>.chromiumapp.or
 ### 1. Google Calendar
 
 1. En [Google Cloud Console](https://console.cloud.google.com/), crea un proyecto y habilita **Google Calendar API**.
-2. Ve a **Pantalla de consentimiento de OAuth** y elige tipo **Externo**. Agrega los scopes `.../auth/calendar.app.created` y `email`.
+2. Ve a **Pantalla de consentimiento de OAuth** y elige tipo **Externo**. Agrega los scopes `.../auth/calendar.app.created`, `.../auth/calendar.readonly` (para “Mi agenda”) y `email`.
 3. Ve a **Credenciales → Crear ID de cliente OAuth**, con tipo **Aplicación web**:
    - URI de redireccionamiento autorizado: `https://<ID>.chromiumapp.org/google`
 4. Copia el **Client ID** en `GOOGLE_CLIENT_ID` de `config.js`.
 
 > ⚠️ El scope de Calendar es *sensible*. Mientras la app esté en modo **Prueba**, solo pueden conectarse hasta 100 usuarios que agregues como testers. Para cualquier usuario hay que **publicar la app y pasar la verificación de Google**, que pide una política de privacidad y un video de demostración.
 
-La extensión solo pide `calendar.app.created`: puede crear su propio calendario y modificar únicamente ese, no el resto de tus calendarios.
+La extensión solo **modifica** su propio calendario (`calendar.app.created`). Para “Mi agenda” pide además `calendar.readonly`: puede **ver** tus otros calendarios, pero nunca cambiarlos. Quien conectó antes de esta función verá un botón “Dar permiso” en el tablero.
 
 ### 2. Outlook / Microsoft 365
 

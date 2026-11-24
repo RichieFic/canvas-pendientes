@@ -157,6 +157,23 @@
 .cpt-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .cpt-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
+/* ---------- Mi agenda ---------- */
+.cpt-agenda-day + .cpt-agenda-day { margin-top: 4px; }
+.cpt-agenda-day .cpt-gtitle { margin: 8px 2px 6px; }
+.cpt-agenda-item {
+  display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; margin-bottom: 6px;
+  border-radius: 8px; border: 1px solid var(--_line);
+  border-left: 4px solid var(--cpt-cal, var(--_accent));
+  text-decoration: none !important; color: inherit !important;
+}
+a.cpt-agenda-item[href]:hover { background: var(--_hover); }
+.cpt-agenda-time { flex: none; width: 118px; font-size: 12px; color: var(--_muted); font-variant-numeric: tabular-nums; }
+.cpt-agenda-body { flex: 1; min-width: 0; }
+.cpt-agenda-body .cpt-title { overflow: hidden; text-overflow: ellipsis; }
+.cpt-agenda-item.cpt-past { opacity: .5; }
+.cpt-agenda-item.cpt-now { background: var(--_hover); border-color: color-mix(in srgb, var(--_accent) 45%, transparent); border-left-color: var(--cpt-cal, var(--_accent)); }
+.cpt-center { display: block; margin: 0 auto 8px; }
+
 .cpt-ann {
   display: block; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--_line);
   text-decoration: none !important; color: inherit !important;

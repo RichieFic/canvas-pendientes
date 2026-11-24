@@ -48,6 +48,7 @@ const CPT_DEFAULTS = {
   theme: { enabled: true, preset: "contraste", customized: false, ...stripLabel(CPT_PRESETS.contraste), fontSize: 100, fontFamily: "" },
   dashboard: {
     enabled: true, progress: true, announcements: true, upcoming: true, annCount: 5, upcomingDays: 7,
+    agenda: true, agendaDays: 3, // "Mi agenda" de Google Calendar
     hideWidgets: ["people-widget"],
     // Colores de la gráfica y la barra de progreso
     chartColors: { ...CPT_PRESETS.contraste.chart },
