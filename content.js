@@ -4,103 +4,32 @@
   if (window.__cptLoaded) return;
   window.__cptLoaded = true;
 
-  const DAYS_BACK = 21;   // cuántos días atrás buscar tareas atrasadas
-  const DAYS_AHEAD = 60;  // cuántos días adelante buscar pendientes
-  const TYPES = {
-    assignment: "Tarea",
-    quiz: "Quiz",
-    discussion_topic: "Foro",
-    wiki_page: "Página",
-    calendar_event: "Evento",
-    planner_note: "Nota",
+  const { el, dateFmt, relative, bucket } = CPT.ui;
+  const PROVIDER_LABEL = { google: "Google Calendar", microsoft: "Outlook" };
+
+  // ---------- Datos compartidos (panel + dashboard) ----------
+  let itemsPromise = null;
+  CPT.getItems = (force = false) => {
+    if (force || !itemsPromise) {
+      itemsPromise = CPT.loadItems().then((items) => {
+        sendToBackground(items);
+        return items;
+      });
+      itemsPromise.catch(() => { itemsPromise = null; });
+    }
+    return itemsPromise;
   };
 
-  let cache = null;
-
-  // ---------- API ----------
-  function nextLink(header) {
-    if (!header) return null;
-    const part = header.split(",").find((p) => p.includes('rel="next"'));
-    const m = part && part.match(/<([^>]+)>/);
-    return m ? m[1] : null;
-  }
-
-  async function fetchAll(url) {
-    let out = [];
-    let next = url;
-    while (next) {
-      const r = await fetch(next, {
-        credentials: "same-origin",
-        headers: { Accept: "application/json" },
-      });
-      if (!r.ok) throw new Error(`Canvas respondió ${r.status}`);
-      const text = (await r.text()).replace(/^while\(1\);/, "");
-      out = out.concat(JSON.parse(text));
-      next = nextLink(r.headers.get("Link"));
+  function send(msg) {
+    try {
+      return chrome.runtime.sendMessage(msg).catch(() => null);
+    } catch {
+      return Promise.resolve(null); // la extensión se recargó; ignorar
     }
-    return out;
   }
 
-  async function loadItems() {
-    const now = Date.now();
-    const start = new Date(now - DAYS_BACK * 864e5).toISOString();
-    const end = new Date(now + DAYS_AHEAD * 864e5).toISOString();
-    const raw = await fetchAll(
-      `/api/v1/planner/items?start_date=${start}&end_date=${end}&per_page=100`
-    );
-
-    return raw
-      .map((it) => {
-        const p = it.plannable || {};
-        const sub = it.submissions || {};
-        const dueStr = p.due_at || p.todo_date || it.plannable_date;
-        return {
-          title: p.title || p.name || "(sin título)",
-          course: it.context_name || "",
-          type: TYPES[it.plannable_type] || it.plannable_type,
-          url: it.html_url,
-          due: dueStr ? new Date(dueStr) : null,
-          done:
-            !!(sub.submitted || sub.graded || sub.excused) ||
-            !!(it.planner_override && it.planner_override.marked_complete),
-          missing: !!sub.missing,
-          points: p.points_possible,
-        };
-      })
-      .filter((x) => x.due && !x.done && (x.due.getTime() >= now || x.missing))
-      .sort((a, b) => a.due - b.due);
-  }
-
-  // ---------- Formato ----------
-  const dateFmt = new Intl.DateTimeFormat("es-MX", {
-    weekday: "short", day: "numeric", month: "short",
-    hour: "2-digit", minute: "2-digit",
-  });
-
-  function relative(d) {
-    const diff = d.getTime() - Date.now();
-    const h = Math.round(Math.abs(diff) / 36e5);
-    const days = Math.round(Math.abs(diff) / 864e5);
-    const txt = h < 24 ? `${h} h` : `${days} día${days === 1 ? "" : "s"}`;
-    return diff < 0 ? `hace ${txt}` : `en ${txt}`;
-  }
-
-  function bucket(d) {
-    const now = new Date();
-    if (d < now) return "Atrasadas";
-    const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-    const dayDiff = Math.round((startOfDay(d) - startOfDay(now)) / 864e5);
-    if (dayDiff === 0) return "Hoy";
-    if (dayDiff === 1) return "Mañana";
-    if (dayDiff <= 7) return "Esta semana";
-    return "Después";
-  }
-
-  function el(tag, cls, text) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
+  function sendToBackground(items) {
+    send({ type: "items", origin: location.origin, items: CPT.serializeItems(items) });
   }
 
   // ---------- UI ----------
@@ -115,11 +44,15 @@
   const title = el("strong", null, "Pendientes");
   const refresh = el("button", "cpt-icon", "⟳");
   refresh.title = "Actualizar";
+  const gear = el("button", "cpt-icon", "⚙");
+  gear.title = "Configuración (colores, calendario…)";
   const close = el("button", "cpt-icon", "✕");
   close.title = "Cerrar";
-  header.append(title, refresh, close);
+  for (const b of [refresh, gear, close]) b.type = "button";
+  header.append(title, refresh, gear, close);
   const body = el("div", "cpt-body");
-  panel.append(header, body);
+  const footer = el("div", "cpt-footer");
+  panel.append(header, body, footer);
   document.body.append(btn, panel);
 
   function setBadge(items) {
@@ -166,24 +99,75 @@
     }
   }
 
-  async function refreshData() {
+  async function renderFooter() {
+    let st = {};
+    try {
+      st = await chrome.storage.local.get(["status_google", "status_microsoft"]);
+    } catch { return; }
+    const connected = ["google", "microsoft"]
+      .map((p) => ({ p, s: st[`status_${p}`] }))
+      .filter((x) => x.s && x.s.connected);
+
+    const info = el("span");
+    const link = el("button", "cpt-link");
+    link.type = "button";
+    link.addEventListener("click", openOptions);
+
+    if (!connected.length) {
+      info.textContent = "📅 Lleva tus entregas a tu calendario";
+      link.textContent = "Conectar";
+    } else {
+      const bad = connected.find((x) => x.s.lastError);
+      if (bad) {
+        info.textContent = `⚠ ${PROVIDER_LABEL[bad.p]}: ${bad.s.lastError}`;
+        info.className = "cpt-warn";
+        info.title = bad.s.lastError;
+        link.textContent = "Revisar";
+      } else {
+        const names = connected.map((x) => PROVIDER_LABEL[x.p]).join(" y ");
+        const last = Math.max(...connected.map((x) => x.s.lastSync || 0));
+        info.textContent = `📅 ${names}${last ? ` · sincronizado ${relative(new Date(last))}` : ""}`;
+        link.textContent = "Ajustes";
+      }
+    }
+    footer.replaceChildren(info, link);
+  }
+
+  async function refreshData(force = true) {
     body.replaceChildren(el("p", "cpt-empty", "Cargando…"));
     try {
-      cache = await loadItems();
-      render(cache);
-      setBadge(cache);
+      const items = await CPT.getItems(force);
+      render(items);
+      setBadge(items);
     } catch (e) {
       body.replaceChildren(el("p", "cpt-empty", `No se pudo cargar: ${e.message}. ¿Tienes sesión iniciada?`));
     }
+    renderFooter();
   }
+
+  function openOptions() {
+    send({ type: "openOptions" });
+  }
+
+  CPT.openPanel = () => {
+    panel.hidden = false;
+    refreshData(false);
+  };
 
   btn.addEventListener("click", () => {
     panel.hidden = !panel.hidden;
-    if (!panel.hidden && !cache) refreshData();
+    if (!panel.hidden) refreshData(false);
   });
   close.addEventListener("click", () => (panel.hidden = true));
-  refresh.addEventListener("click", refreshData);
+  refresh.addEventListener("click", () => refreshData(true));
+  gear.addEventListener("click", openOptions);
+
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && (changes.status_google || changes.status_microsoft) && !panel.hidden) renderFooter();
+    });
+  } catch { /* contexto invalidado */ }
 
   // Carga silenciosa para mostrar el contador sin abrir el panel
-  loadItems().then((items) => { cache = items; setBadge(items); }).catch(() => {});
+  CPT.getItems().then(setBadge).catch(() => {});
 })();

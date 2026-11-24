@@ -1,15 +1,38 @@
 {
   "manifest_version": 3,
   "name": "Canvas Pendientes Tec",
-  "version": "1.0.0",
-  "description": "Todas tus entregas pendientes de Canvas en un solo panel, ordenadas por fecha límite.",
+  "version": "1.1.0",
+  "description": "Tus entregas de Canvas en un panel, en tu Google Calendar u Outlook, con anuncios recientes y colores a tu gusto.",
+  "permissions": ["storage", "identity", "alarms"],
+  "host_permissions": [
+    "https://experiencia21.tec.mx/*",
+    "https://*.instructure.com/*",
+    "https://www.googleapis.com/*",
+    "https://oauth2.googleapis.com/*",
+    "https://graph.microsoft.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_title": "Canvas Pendientes — Configuración"
+  },
   "content_scripts": [
     {
       "matches": [
         "https://experiencia21.tec.mx/*",
         "https://*.instructure.com/*"
       ],
-      "js": ["content.js"],
+      "js": ["settings.js", "theme.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://experiencia21.tec.mx/*",
+        "https://*.instructure.com/*"
+      ],
+      "js": ["canvas-api.js", "content.js", "dashboard.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }

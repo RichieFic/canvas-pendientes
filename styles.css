@@ -1,10 +1,23 @@
+/* Variables: el tema personalizado las sobrescribe en :root */
+.cpt-btn, .cpt-panel, .cpt-dash {
+  --_accent: var(--cpt-accent, #0039a6);
+  --_bg: var(--cpt-ui-bg, #ffffff);
+  --_text: var(--cpt-ui-text, #1f2328);
+  --_muted: color-mix(in srgb, var(--_text) 62%, var(--_bg));
+  --_line: color-mix(in srgb, var(--_text) 14%, transparent);
+  --_hover: color-mix(in srgb, var(--_accent) 8%, var(--_bg));
+  --_chip: color-mix(in srgb, var(--_accent) 14%, var(--_bg));
+  --_late: #c4161c;
+}
+
+/* ---------- Botón flotante ---------- */
 .cpt-btn {
   position: fixed; right: 20px; bottom: 20px; z-index: 2147483000;
   width: 52px; height: 52px; border-radius: 50%; border: none;
-  background: #0039a6; color: #fff; font-size: 22px; cursor: pointer;
+  background: var(--_accent); color: #fff; font-size: 22px; cursor: pointer;
   box-shadow: 0 4px 14px rgba(0,0,0,.25);
 }
-.cpt-btn:hover { background: #002b7f; }
+.cpt-btn:hover { filter: brightness(.88); }
 .cpt-badge {
   position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px;
   padding: 0 5px; border-radius: 10px; background: #e0222d; color: #fff;
@@ -12,46 +25,90 @@
 }
 .cpt-badge[hidden] { display: none; }
 
+/* ---------- Panel ---------- */
 .cpt-panel {
   position: fixed; right: 20px; bottom: 84px; z-index: 2147483000;
-  width: 380px; max-height: 75vh; display: flex; flex-direction: column;
-  background: #fff; color: #1f2328; border-radius: 12px;
+  width: 380px; max-width: calc(100vw - 32px); max-height: 75vh;
+  display: flex; flex-direction: column;
+  background: var(--_bg); color: var(--_text); border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,.25);
   font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .cpt-panel[hidden] { display: none; }
 .cpt-header {
   display: flex; align-items: center; gap: 6px; padding: 12px 14px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--_line);
 }
 .cpt-header strong { flex: 1; font-size: 16px; }
 .cpt-icon {
   border: none; background: transparent; cursor: pointer; font-size: 16px;
-  width: 30px; height: 30px; border-radius: 6px; color: #555;
+  width: 30px; height: 30px; border-radius: 6px; color: var(--_muted);
 }
-.cpt-icon:hover { background: #f1f3f5; }
+.cpt-icon:hover { background: var(--_hover); color: var(--_text); }
 .cpt-body { overflow-y: auto; padding: 6px 10px 12px; }
-.cpt-empty { text-align: center; color: #666; padding: 24px 8px; margin: 0; }
+.cpt-empty { text-align: center; color: var(--_muted); padding: 24px 8px; margin: 0; }
 
 .cpt-gtitle {
   margin: 12px 4px 6px; font-size: 12px; text-transform: uppercase;
-  letter-spacing: .04em; color: #555;
+  letter-spacing: .04em; color: var(--_muted);
 }
-.cpt-late { color: #c4161c !important; }
+.cpt-late { color: var(--_late) !important; }
 
 .cpt-item {
   display: block; padding: 9px 10px; margin-bottom: 6px; border-radius: 8px;
-  border: 1px solid #e5e7eb; text-decoration: none !important; color: inherit !important;
+  border: 1px solid var(--_line); text-decoration: none !important; color: inherit !important;
 }
-.cpt-item:hover { background: #f5f8ff; border-color: #b9c8ee; }
-.cpt-top { display: flex; gap: 6px; align-items: center; margin-bottom: 2px; }
+.cpt-item:hover { background: var(--_hover); border-color: color-mix(in srgb, var(--_accent) 35%, transparent); }
+.cpt-top { display: flex; gap: 6px; align-items: center; margin-bottom: 2px; min-width: 0; }
 .cpt-type {
-  font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px;
-  background: #e8eefc; color: #0039a6;
+  flex: none; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px;
+  background: var(--_chip); color: var(--_accent);
 }
 .cpt-course {
-  font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; color: var(--_muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .cpt-title { font-weight: 600; }
-.cpt-meta { display: flex; gap: 10px; font-size: 12px; color: #666; margin-top: 2px; }
-.cpt-rel { font-weight: 600; color: #0039a6; }
+.cpt-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--_muted); margin-top: 2px; }
+.cpt-rel { font-weight: 600; color: var(--_accent); }
+
+.cpt-footer {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  border-top: 1px solid var(--_line); font-size: 12px; color: var(--_muted);
+}
+.cpt-footer span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cpt-link {
+  border: none; background: none; padding: 0; cursor: pointer;
+  color: var(--_accent); font: inherit; font-weight: 600;
+}
+.cpt-link:hover { text-decoration: underline; }
+.cpt-warn { color: var(--_late); }
+
+/* ---------- Widget del dashboard ---------- */
+.cpt-dash {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;
+  margin: 16px 0 24px; color: var(--_text);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.cpt-dash-col {
+  background: var(--_bg); border: 1px solid var(--_line); border-radius: 12px;
+  padding: 14px 14px 10px; min-width: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.cpt-dash-head { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.cpt-dash-head h3 {
+  flex: 1; margin: 0 !important; font-size: 16px !important; font-weight: 700 !important;
+  color: var(--_text) !important;
+}
+.cpt-dash-list { display: flex; flex-direction: column; gap: 6px; }
+
+.cpt-ann {
+  display: block; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--_line);
+  text-decoration: none !important; color: inherit !important;
+}
+.cpt-ann:hover { background: var(--_hover); }
+.cpt-ann-title { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.cpt-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--_accent); }
+.cpt-ann-snippet {
+  font-size: 13px; color: var(--_muted); margin-top: 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}

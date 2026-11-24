@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canvas Pendientes — Configuración</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header class="top">
+    <h1>📋 Canvas Pendientes</h1>
+    <p class="sub">Configuración · los cambios se guardan solos</p>
+    <span id="saved" class="saved" aria-live="polite"></span>
+  </header>
+
+  <main>
+    <!-- Apariencia -->
+    <section class="card">
+      <div class="card-head">
+        <h2>🎨 Apariencia de Canvas</h2>
+        <label class="switch"><input type="checkbox" id="theme-enabled"><span></span></label>
+      </div>
+      <p class="hint">Cambia los colores y la letra de Canvas. Desactívalo para volver al aspecto original.</p>
+
+      <div id="theme-body">
+        <div class="row">
+          <label for="preset">Tema base</label>
+          <select id="preset"></select>
+        </div>
+
+        <div class="colors">
+          <label><input type="color" data-color="bg"> Fondo</label>
+          <label><input type="color" data-color="text"> Texto</label>
+          <label><input type="color" data-color="accent"> Enlaces y acento</label>
+          <label><input type="color" data-color="card"> Tarjetas y tablas</label>
+          <label><input type="color" data-color="nav"> Barra lateral</label>
+          <label><input type="color" data-color="navText"> Íconos de la barra</label>
+        </div>
+
+        <div class="row">
+          <label for="font-size">Tamaño de letra <output id="font-size-out"></output></label>
+          <input type="range" id="font-size" min="80" max="150" step="5">
+        </div>
+        <div class="row">
+          <label for="font-family">Tipo de letra</label>
+          <select id="font-family"></select>
+        </div>
+
+        <div class="preview" id="preview" aria-label="Vista previa">
+          <div class="pv-nav"><span>☰</span><span>🏠</span><span>📚</span><span>📅</span></div>
+          <div class="pv-main">
+            <div class="pv-title">Panel de control</div>
+            <p class="pv-text">Así se verá el texto de Canvas con <a href="#" class="pv-link">un enlace</a>.</p>
+            <div class="pv-card">
+              <strong>Matemáticas II</strong>
+              <span>Tarea 4 · vence mañana</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn ghost" id="theme-reset">Restaurar colores</button>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section class="card">
+      <div class="card-head">
+        <h2>🏠 Pantalla principal</h2>
+        <label class="switch"><input type="checkbox" id="dash-enabled"><span></span></label>
+      </div>
+      <p class="hint">Agrega un resumen arriba de tus cursos en el panel de control de Canvas.</p>
+      <div id="dash-body">
+        <label class="check"><input type="checkbox" id="dash-ann"> Últimos anuncios</label>
+        <div class="row indent">
+          <label for="dash-ann-count">Cuántos anuncios</label>
+          <input type="number" id="dash-ann-count" min="1" max="20">
+        </div>
+        <label class="check"><input type="checkbox" id="dash-up"> Próximas entregas</label>
+        <div class="row indent">
+          <label for="dash-up-days">Días hacia adelante</label>
+          <input type="number" id="dash-up-days" min="1" max="60">
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendario -->
+    <section class="card">
+      <div class="card-head"><h2>📅 Calendario</h2></div>
+      <p class="hint">Conecta tu calendario y tus entregas aparecerán en un calendario llamado
+        <b>“Canvas Pendientes”</b>, con notificaciones. Se actualiza solo cuando abres Canvas y cada hora.</p>
+
+      <div class="providers">
+        <div class="provider" data-provider="google">
+          <div class="pv-head"><span class="logo">G</span><strong>Google Calendar</strong></div>
+          <p class="pstatus">—</p>
+          <div class="pactions">
+            <button type="button" class="btn" data-act="connect">Conectar</button>
+            <button type="button" class="btn ghost" data-act="disconnect" hidden>Desconectar</button>
+          </div>
+        </div>
+        <div class="provider" data-provider="microsoft">
+          <div class="pv-head"><span class="logo ms">M</span><strong>Outlook / Microsoft 365</strong></div>
+          <p class="pstatus">—</p>
+          <div class="pactions">
+            <button type="button" class="btn" data-act="connect">Conectar</button>
+            <button type="button" class="btn ghost" data-act="disconnect" hidden>Desconectar</button>
+          </div>
+        </div>
+      </div>
+
+      <h3>Recordatorios</h3>
+      <div class="reminders" id="reminders"></div>
+      <p class="hint small">Outlook solo permite un recordatorio por evento: se usa el más anticipado.</p>
+
+      <div class="row">
+        <label for="event-min">Duración del evento (termina a la hora de entrega)</label>
+        <select id="event-min">
+          <option value="15">15 min</option>
+          <option value="30">30 min</option>
+          <option value="60">1 hora</option>
+          <option value="120">2 horas</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="auto-sync"> Sincronizar automáticamente</label>
+
+      <div class="sync-row">
+        <button type="button" class="btn" id="sync-now">Sincronizar ahora</button>
+        <span id="sync-msg" class="hint small"></span>
+      </div>
+    </section>
+
+    <!-- Avanzado -->
+    <details class="card advanced">
+      <summary>⚙️ Avanzado (para quien publica la extensión)</summary>
+      <p class="hint">Registra estas Redirect URIs en Google Cloud y en Microsoft Entra. Los Client IDs van en
+        <code>config.js</code>; aquí puedes sobrescribirlos para pruebas en este navegador.</p>
+      <div class="row">
+        <label>ID de la extensión</label>
+        <code id="ext-id"></code>
+      </div>
+      <div class="row">
+        <label>Redirect URI de Google</label>
+        <code id="redir-google"></code>
+      </div>
+      <div class="row">
+        <label for="dev-google">Google Client ID</label>
+        <input type="text" id="dev-google" placeholder="(usa config.js)" spellcheck="false">
+      </div>
+      <div class="row">
+        <label>Redirect URI de Microsoft</label>
+        <code id="redir-microsoft"></code>
+      </div>
+      <div class="row">
+        <label for="dev-microsoft">Microsoft Client ID</label>
+        <input type="text" id="dev-microsoft" placeholder="(usa config.js)" spellcheck="false">
+      </div>
+    </details>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="settings.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
