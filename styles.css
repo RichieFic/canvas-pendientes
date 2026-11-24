@@ -117,10 +117,10 @@
   background: color-mix(in srgb, var(--_text) 10%, var(--_bg));
 }
 .cpt-bar-fill {
-  height: 100%; border-radius: 6px; background: var(--_accent);
+  height: 100%; border-radius: 6px; background: var(--cpt-chart-done, var(--_ok));
   transition: width .6s ease;
 }
-.cpt-bar-fill.cpt-full { background: var(--_ok); }
+.cpt-bar-fill.cpt-full { background: var(--cpt-chart-done, var(--_ok)); }
 .cpt-today-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .cpt-today-list li { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cpt-today-list a {
@@ -132,9 +132,9 @@
   flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
   font-size: 12px; font-weight: 800; border: 2px solid var(--_line); color: var(--_muted);
 }
-.cpt-today-list .cpt-done .cpt-check { background: var(--_ok); border-color: var(--_ok); color: #fff; }
+.cpt-today-list .cpt-done .cpt-check { background: var(--cpt-chart-done, var(--_ok)); border-color: var(--cpt-chart-done, var(--_ok)); color: #fff; }
 .cpt-today-list .cpt-done a { text-decoration: line-through !important; opacity: .65; font-weight: 400; }
-.cpt-today-list .cpt-late .cpt-check { border-color: var(--_late); }
+.cpt-today-list .cpt-late .cpt-check { border-color: var(--cpt-chart-late, var(--_late)); }
 .cpt-time { flex: none; font-size: 12px; color: var(--_muted); }
 
 .cpt-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
@@ -147,9 +147,9 @@
   border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--_text) 6%, var(--_bg));
 }
 .cpt-seg { width: 100%; }
-.cpt-seg-done { background: var(--_ok); }
-.cpt-seg-pending { background: color-mix(in srgb, var(--_accent) 55%, var(--_bg)); }
-.cpt-seg-late { background: var(--_late); }
+.cpt-seg-done { background: var(--cpt-chart-done, var(--_ok)); }
+.cpt-seg-pending { background: var(--cpt-chart-pending, var(--_accent)); }
+.cpt-seg-late { background: var(--cpt-chart-late, var(--_late)); }
 .cpt-chart-day { font-size: 11px; color: var(--_muted); white-space: nowrap; text-transform: capitalize; }
 .cpt-today .cpt-chart-day { color: var(--_accent); font-weight: 700; }
 .cpt-today .cpt-chart-track { outline: 2px solid color-mix(in srgb, var(--_accent) 45%, transparent); outline-offset: 1px; }

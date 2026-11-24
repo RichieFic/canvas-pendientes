@@ -155,6 +155,51 @@
     $("#dash-up-days").value = d.upcomingDays;
   }
 
+  // ---------- Colores de la gráfica ----------
+  function renderChartColors() {
+    const c = settings.dashboard.chartColors;
+    for (const inp of $$("[data-chart]")) inp.value = c[inp.dataset.chart];
+    const pv = $("#chart-preview");
+    pv.style.setProperty("--cp-done", c.done);
+    pv.style.setProperty("--cp-pending", c.pending);
+    pv.style.setProperty("--cp-late", c.late);
+  }
+
+  function initChartColors() {
+    // Vista previa: [completadas, pendientes, atrasadas] por día (máx. 3)
+    const sample = [[2, 0, 0], [1, 1, 0], [0, 2, 1], [1, 0, 1], [0, 1, 0], [0, 2, 0], [0, 0, 0]];
+    const cols = $("#cp-cols");
+    for (const [d, p, l] of sample) {
+      const col = document.createElement("span");
+      for (const [cls, n] of [["d", d], ["p", p], ["l", l]]) {
+        if (!n) continue;
+        const seg = document.createElement("i");
+        seg.className = cls;
+        seg.style.height = `${(n / 3) * 100}%`;
+        col.append(seg);
+      }
+      cols.append(col);
+    }
+    for (const inp of $$("[data-chart]")) {
+      inp.addEventListener("input", () => {
+        settings.dashboard.chartColors[inp.dataset.chart] = inp.value;
+        renderChartColors();
+        save();
+      });
+    }
+    $("#chart-reset").addEventListener("click", () => {
+      settings.dashboard.chartColors = { ...CPT_DEFAULTS.dashboard.chartColors };
+      renderChartColors();
+      save();
+    });
+    // Pendientes = acento del tema; completadas/atrasadas se quedan.
+    $("#chart-from-theme").addEventListener("click", () => {
+      settings.dashboard.chartColors.pending = cptSanitizeTheme(settings.theme).accent;
+      renderChartColors();
+      save();
+    });
+  }
+
   function initDash() {
     const bind = (sel, key, read) =>
       $(sel).addEventListener("change", (e) => {
@@ -307,9 +352,11 @@
     guessPreset();
     initTheme();
     initDash();
+    initChartColors();
     initCalendar();
     renderTheme();
     renderDash();
+    renderChartColors();
     renderCalendar();
     renderStatus();
     initAdvanced();

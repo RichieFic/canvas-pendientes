@@ -126,6 +126,23 @@ input[type="color"] {
 .btn.ghost { background: transparent; color: var(--accent); }
 
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+div.indent { padding-left: 28px; margin-bottom: 8px; }
+
+/* Vista previa de la gráfica */
+.chart-preview {
+  display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;
+  padding: 12px 14px; margin: 4px 0 12px; border: 1px solid var(--line); border-radius: 10px;
+}
+.cp-bar { flex: 1 1 160px; height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; align-self: center; }
+.cp-fill { width: 66%; height: 100%; background: var(--cp-done); }
+.cp-cols { display: flex; gap: 6px; height: 64px; align-items: stretch; }
+.cp-cols span {
+  width: 16px; border-radius: 4px; background: var(--line); display: flex; flex-direction: column-reverse; overflow: hidden;
+}
+.cp-cols i { display: block; width: 100%; }
+.cp-cols i.d { background: var(--cp-done); }
+.cp-cols i.p { background: var(--cp-pending); }
+.cp-cols i.l { background: var(--cp-late); }
 
 /* Proveedores */
 .providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }

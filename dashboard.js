@@ -209,6 +209,16 @@
     }
   }
 
+  // Colores de la gráfica como variables CSS (se actualizan en vivo).
+  function applyChartColors(c) {
+    if (!widget) return;
+    const hex = /^#[0-9a-f]{6}$/i;
+    const def = CPT_DEFAULTS.dashboard.chartColors;
+    for (const k of ["done", "pending", "late"]) {
+      widget.style.setProperty(`--cpt-chart-${k}`, c && hex.test(c[k] || "") ? c[k] : def[k]);
+    }
+  }
+
   function mount() {
     if (!widget || widget.isConnected) return;
     const header = document.querySelector(".ic-Dashboard-header");
@@ -225,6 +235,14 @@
 
     widget = el("section", "cpt-dash");
     widget.setAttribute("aria-label", "Resumen de Canvas Pendientes");
+    applyChartColors(s.chartColors);
+    try {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === "sync" && changes.settings) {
+          cptGetSettings().then((n) => applyChartColors(n.dashboard.chartColors));
+        }
+      });
+    } catch { /* contexto invalidado */ }
 
     if (s.progress) {
       const { col, list } = column("✅ Progreso de hoy");

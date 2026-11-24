@@ -209,11 +209,18 @@ ${ff ? `body, #content :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label, a, butt
     if (!active.recolorBg && !active.dark) return stopRecolor(false);
     const run = () => {
       schedule(document.body);
+      // Canvas (React/InstUI) a veces aplica sus clases de color después de
+      // insertar el elemento: se vigilan cambios de clase y se repasa todo
+      // un par de veces tras la carga.
+      for (const ms of [1500, 5000]) setTimeout(() => active && schedule(document.body), ms);
       if (!observer) {
         observer = new MutationObserver((muts) => {
-          for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) schedule(n);
+          for (const m of muts) {
+            if (m.type === "attributes") schedule(m.target);
+            else for (const n of m.addedNodes) if (n.nodeType === 1) schedule(n);
+          }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
       }
     };
     if (document.body) run();

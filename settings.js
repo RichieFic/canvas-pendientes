@@ -44,6 +44,8 @@ const CPT_DEFAULTS = {
   dashboard: {
     enabled: true, progress: true, announcements: true, upcoming: true, annCount: 5, upcomingDays: 7,
     hideWidgets: ["people-widget"],
+    // Colores de la gráfica y la barra de progreso
+    chartColors: { done: "#1f9d55", pending: "#3d8bfd", late: "#e5484d" },
   },
   calendar: { reminders: [1440, 60], eventMinutes: 30, autoSync: true },
 };

@@ -75,6 +75,21 @@
       <p class="hint">Agrega un resumen arriba de tus cursos en el panel de control de Canvas.</p>
       <div id="dash-body">
         <label class="check"><input type="checkbox" id="dash-progress"> Progreso de hoy y gráfica de la semana</label>
+        <div class="indent">
+          <div class="colors">
+            <label><input type="color" data-chart="done"> Completadas</label>
+            <label><input type="color" data-chart="pending"> Pendientes</label>
+            <label><input type="color" data-chart="late"> Atrasadas</label>
+          </div>
+          <div class="chart-preview" id="chart-preview" aria-hidden="true">
+            <div class="cp-bar"><div class="cp-fill"></div></div>
+            <div class="cp-cols" id="cp-cols"></div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn ghost" id="chart-reset">Colores de gráfica por defecto</button>
+            <button type="button" class="btn ghost" id="chart-from-theme">Usar colores del tema</button>
+          </div>
+        </div>
         <label class="check"><input type="checkbox" id="dash-ann"> Últimos anuncios</label>
         <div class="row indent">
           <label for="dash-ann-count">Cuántos anuncios</label>
