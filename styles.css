@@ -86,8 +86,8 @@
 
 /* ---------- Widget del dashboard ---------- */
 .cpt-dash {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;
-  margin: 16px 0 24px; color: var(--_text);
+  display: flex; flex-direction: column; gap: 16px;
+  margin: 16px 0 24px; color: var(--_text); min-width: 0;
   font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .cpt-dash-col {
@@ -103,7 +103,8 @@
 .cpt-dash-list { display: flex; flex-direction: column; gap: 6px; }
 
 /* ---------- Progreso de hoy ---------- */
-.cpt-dash .cpt-progress { grid-column: 1 / -1; }
+.cpt-dash-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.cpt-dash-row:empty { display: none; }
 .cpt-prog-body {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px 32px;
   align-items: start; padding-bottom: 6px;

@@ -10,6 +10,7 @@
     const ff = font ? `font-family: ${font} !important;` : "";
     const line = `color-mix(in srgb, ${t.text} 16%, transparent)`;
     const soft = `color-mix(in srgb, ${t.text} 70%, ${t.bg})`;
+    const navLight = lum(hexRgb(t.nav)) > 0.6;
 
     return `
 :root {
@@ -84,13 +85,25 @@ html, body, #application, #wrapper, #main, #not_right_side,
   fill: ${t.navText} !important;
 }
 .ic-app-header .ic-app-header__menu-list-link svg { fill: ${t.navText} !important; }
+/* Elemento activo y hover: un tono del color de los íconos sobre la barra
+   (así funciona igual con barra clara u oscura). */
+.ic-app-header__menu-list-item--active .ic-app-header__menu-list-link,
+.ic-app-header__menu-list-item--active .menu-item__text {
+  background-color: color-mix(in srgb, ${t.navText} 14%, ${t.nav}) !important;
+}
 .ic-app-header__menu-list-item--active .ic-app-header__menu-list-link {
-  background-color: ${t.bg} !important;
+  box-shadow: inset 3px 0 0 ${t.navText} !important;
 }
-.ic-app-header__menu-list-item--active :is(.menu-item__text, .ic-icon-svg, svg) {
-  color: ${t.accent} !important;
-  fill: ${t.accent} !important;
+.ic-app-header__menu-list-link:hover {
+  background-color: color-mix(in srgb, ${t.navText} 8%, ${t.nav}) !important;
 }
+.ic-app-header__menu-list-item--active :is(.menu-item__text, .ic-icon-svg, svg, path) {
+  color: ${t.navText} !important;
+  fill: ${t.navText} !important;
+}
+.ic-app-header__logomark-container { background-color: ${t.nav} !important; }
+${navLight ? `/* Barra clara: el logo (blanco) se pinta del color de los íconos */
+.ic-app-header__logomark { filter: brightness(0)${lum(hexRgb(t.navText)) > 0.5 ? " invert(1)" : ""} !important; }` : ""}
 
 /* Tipografía */
 #content, #right-side, #left-side, .ic-app-nav-toggle-and-crumbs {

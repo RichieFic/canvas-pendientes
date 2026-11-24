@@ -234,9 +234,14 @@
       fillProgress(list);
     }
 
+    // Anuncios y entregas van en su propia cuadrícula (si compartieran la de
+    // la tarjeta de progreso, esta forzaría columnas vacías).
+    const row = el("div", "cpt-dash-row");
+    widget.append(row);
+
     if (s.announcements) {
       const { col, list } = column("📢 Últimos anuncios");
-      widget.append(col);
+      row.append(col);
       fillAnnouncements(list, Math.min(20, Math.max(1, s.annCount)));
     }
     if (s.upcoming) {
@@ -245,7 +250,7 @@
       all.hidden = true;
       all.addEventListener("click", () => CPT.openPanel && CPT.openPanel());
       const { col, list } = column("⏰ Próximas entregas", all);
-      widget.append(col);
+      row.append(col);
       fillUpcoming(list, Math.min(60, Math.max(1, s.upcomingDays)), all);
     }
 

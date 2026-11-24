@@ -38,9 +38,30 @@
     return colors;
   }
 
+  // Se calcula comparando con el tema base (no depende de un flag guardado,
+  // así también funciona con ajustes de versiones anteriores).
+  function isCustomized() {
+    const orig = presetColors(basePreset());
+    return Object.keys(orig).some((k) => String(settings.theme[k]).toLowerCase() !== orig[k].toLowerCase());
+  }
+
+  // Ajustes viejos sin tema base: elegir el preset más parecido.
+  function guessPreset() {
+    if (CPT_PRESETS[settings.theme.preset]) return;
+    let best = "tec";
+    let bestScore = -1;
+    for (const key of Object.keys(CPT_PRESETS)) {
+      const orig = presetColors(key);
+      const score = Object.keys(orig).filter((k) => String(settings.theme[k]).toLowerCase() === orig[k].toLowerCase()).length;
+      if (score > bestScore) { best = key; bestScore = score; }
+    }
+    settings.theme.preset = best;
+  }
+
   function renderTheme() {
     const t = settings.theme;
     const base = basePreset();
+    t.customized = isCustomized();
     $("#theme-enabled").checked = t.enabled;
     $("#theme-body").classList.toggle("disabled", !t.enabled);
     // El selector muestra el tema base; si se editó, lo indica.
@@ -92,10 +113,6 @@
       inp.addEventListener("input", () => {
         settings.theme[inp.dataset.color] = inp.value;
         settings.theme.preset = basePreset();
-        const orig = presetColors(settings.theme.preset);
-        settings.theme.customized = Object.keys(orig).some(
-          (k) => String(settings.theme[k]).toLowerCase() !== orig[k].toLowerCase()
-        );
         renderTheme();
         save();
       });
@@ -287,6 +304,7 @@
   // ---------- Inicio ----------
   async function init() {
     settings = await cptGetSettings();
+    guessPreset();
     initTheme();
     initDash();
     initCalendar();
