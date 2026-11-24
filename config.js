@@ -4,7 +4,8 @@
 // eslint-disable-next-line no-unused-vars
 const CPT_CONFIG = {
   // Google Cloud Console → Credenciales → ID de cliente OAuth (tipo "Aplicación web")
-  GOOGLE_CLIENT_ID: "",
+  // El Client ID es público (no es un secreto); el "secreto del cliente" NO va aquí.
+  GOOGLE_CLIENT_ID: "306104418817-mcit03oukucdg6kgngmdbcopt3hqda5o.apps.googleusercontent.com",
   // Microsoft Entra (Azure) → Registros de aplicaciones → "Id. de aplicación (cliente)"
   MICROSOFT_CLIENT_ID: "",
 };
