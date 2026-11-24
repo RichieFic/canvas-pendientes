@@ -234,6 +234,9 @@ function buildEvent(p, it, cal) {
   const reminders = [...new Set((cal.reminders || []).map((m) => Math.max(0, Number(m) - dur)))]
     .filter((m) => Number.isFinite(m) && m <= 40320)
     .sort((a, b) => b - a);
+  // Google: si está activado, los 5 avisos se reparten el día de la entrega.
+  const spread = p === "google" ? dueDayReminders(start, cal.hourly) : null;
+  const googleReminders = spread || reminders.slice(0, 5);
   const summary = `${it.missing ? "⚠ " : ""}${it.type}: ${it.title}`;
   const isHttp = /^https?:\/\//.test(it.url || "");
 
@@ -250,7 +253,7 @@ function buildEvent(p, it, cal) {
       transparency: "transparent",
       reminders: {
         useDefault: false,
-        overrides: reminders.slice(0, 5).map((minutes) => ({ method: "popup", minutes })),
+        overrides: googleReminders.map((minutes) => ({ method: "popup", minutes })),
       },
       ...(isHttp ? { source: { title: "Canvas", url: it.url } } : {}),
       ...(it.missing ? { colorId: "11" } : {}),
@@ -276,75 +279,36 @@ function buildEvent(p, it, cal) {
 }
 
 // ---------------------------------------------------------------------------
-// Avisos cada hora el día de la entrega
+// Avisos repartidos el día de la entrega (solo Google: máx. 5 por evento)
 // ---------------------------------------------------------------------------
-// Horas en punto del día de la entrega, desde `fromHour`, antes de la hora límite.
-function hourlyTimes(dueIso, fromHour) {
-  const due = new Date(dueIso);
-  const from = Math.min(23, Math.max(0, Math.round(Number(fromHour))));
-  const out = [];
-  for (let h = Number.isFinite(from) ? from : 13; h <= 23; h++) {
-    const t = new Date(due);
-    t.setHours(h, 0, 0, 0);
-    if (t < due) out.push(t);
+// Devuelve los minutos-antes-del-inicio de 5 avisos repartidos de forma pareja
+// entre `fromHour` del día de la entrega y el inicio del evento (el último
+// avisa justo al empezar el evento). null = usar los recordatorios normales.
+function dueDayReminders(start, hourly) {
+  if (!hourly || !hourly.enabled) return null;
+  const from = Math.round(Number(hourly.fromHour));
+  const fromHour = Number.isFinite(from) ? Math.min(23, Math.max(0, from)) : 13;
+  const first = new Date(start);
+  first.setHours(fromHour, 0, 0, 0);
+  const span = start - first;
+  if (span < 0) return null; // vence antes de esa hora: avisos normales
+  const n = 5;
+  const FIVE = 5 * 60_000;
+  const mins = new Set();
+  for (let i = 0; i < n; i++) {
+    // Hora del aviso redondeada a múltiplos de 5 min en el reloj (13:00, 15:40…);
+    // el último avisa justo al empezar el evento.
+    let t = first.getTime() + (span * i) / (n - 1);
+    t = i === n - 1 ? start.getTime() : Math.min(start.getTime(), Math.round(t / FIVE) * FIVE);
+    mins.add(Math.round((start - t) / 60_000));
   }
-  return out;
+  return [...mins].sort((x, y) => y - x);
 }
 
-// Google permite máx. 5 avisos por evento y Outlook solo 1, así que los avisos
-// se reparten en eventos cortos "⏰": cada uno se ubica en la última hora de
-// su grupo y avisa 0, 60, 120… minutos antes.
-function buildHourlyEvent(p, it, at, group) {
-  const end = new Date(at.getTime() + 15 * 60_000);
-  const time = new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit" }).format(new Date(it.due));
-  const summary = `⏰ Hoy vence a las ${time}: ${it.title}`;
-  const isHttp = /^https?:\/\//.test(it.url || "");
-
-  if (p === "google") {
-    const lines = ["Aviso de cada hora de Canvas Pendientes.", `Curso: ${it.course}`];
-    if (isHttp) lines.push("", `Abrir en Canvas: ${it.url}`);
-    return {
-      summary,
-      description: lines.join("\n"),
-      start: { dateTime: at.toISOString() },
-      end: { dateTime: end.toISOString() },
-      transparency: "transparent",
-      reminders: {
-        useDefault: false,
-        overrides: group.map((t) => ({ method: "popup", minutes: Math.round((at - t) / 60_000) })),
-      },
-      ...(isHttp ? { source: { title: "Canvas", url: it.url } } : {}),
-    };
-  }
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-  return {
-    subject: summary,
-    body: {
-      contentType: "HTML",
-      content: `<p><b>Curso:</b> ${esc(it.course)}</p>${isHttp ? `<p><a href="${esc(it.url)}">Abrir en Canvas</a></p>` : ""}`,
-    },
-    start: { dateTime: at.toISOString().slice(0, 19), timeZone: "UTC" },
-    end: { dateTime: end.toISOString().slice(0, 19), timeZone: "UTC" },
-    showAs: "free",
-    isReminderOn: true,
-    reminderMinutesBeforeStart: 0,
-  };
-}
-
-// Evento principal + eventos de aviso por hora. Las claves de los avisos
-// derivan de la entrega, así que se borran junto con ella al completarla.
+// Un evento por entrega. (Versiones anteriores creaban eventos extra "⏰";
+// como sus claves ya no aparecen, la sincronización los borra sola.)
 function buildEvents(p, it, cal) {
-  const out = [{ key: it.key, ev: buildEvent(p, it, cal) }];
-  const hourly = cal.hourly || {};
-  if (!hourly.enabled) return out;
-  const times = hourlyTimes(it.due, hourly.fromHour);
-  const size = p === "google" ? 5 : 1;
-  for (let i = 0; i < times.length; i += size) {
-    const group = times.slice(i, i + size);
-    const at = group[group.length - 1];
-    out.push({ key: `${it.key}#h${at.getHours()}`, ev: buildHourlyEvent(p, it, at, group) });
-  }
-  return out;
+  return [{ key: it.key, ev: buildEvent(p, it, cal) }];
 }
 
 async function syncProvider(p, items, settings) {

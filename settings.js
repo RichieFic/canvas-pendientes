@@ -54,7 +54,7 @@ const CPT_DEFAULTS = {
   },
   calendar: {
     reminders: [1440, 60], eventMinutes: 30, autoSync: true,
-    // El día de la entrega: un aviso cada hora en punto desde `fromHour` hasta la hora límite
+    // Google: el día de la entrega, 5 avisos repartidos desde `fromHour` hasta la hora límite
     hourly: { enabled: true, fromHour: 13 },
   },
 };

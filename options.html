@@ -135,13 +135,13 @@
       <div class="reminders" id="reminders"></div>
       <p class="hint small">Outlook solo permite un recordatorio por evento: se usa el más anticipado.</p>
 
-      <label class="check"><input type="checkbox" id="hourly-enabled"> Avisar cada hora el día de la entrega</label>
+      <label class="check"><input type="checkbox" id="hourly-enabled"> El día de la entrega, repartir 5 avisos hasta la hora límite</label>
       <div class="row indent">
         <label for="hourly-from">A partir de las</label>
         <select id="hourly-from"></select>
       </div>
-      <p class="hint small indent-text">Para dar todos esos avisos se agregan eventos cortos “⏰ Hoy vence…” ese día
-        (Google permite máx. 5 avisos por evento; Outlook, uno por hora).</p>
+      <p class="hint small indent-text">Solo Google Calendar (máx. 5 avisos por evento): reemplaza los recordatorios de arriba
+        cuando la entrega vence después de esa hora. Si vence antes, se usan los de arriba. Outlook sigue usando uno de arriba.</p>
 
       <div class="row">
         <label for="event-min">Duración del evento (termina a la hora de entrega)</label>
