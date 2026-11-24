@@ -265,6 +265,21 @@
       save();
     });
 
+    // Avisos cada hora: opciones de 6:00 a 23:00
+    const hourFmt = new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit" });
+    const hours = [];
+    for (let h = 6; h <= 23; h++) hours.push([String(h), hourFmt.format(new Date(2000, 0, 1, h))]);
+    fillSelect($("#hourly-from"), hours);
+    $("#hourly-enabled").addEventListener("change", (e) => {
+      settings.calendar.hourly.enabled = e.target.checked;
+      renderCalendar();
+      save();
+    });
+    $("#hourly-from").addEventListener("change", (e) => {
+      settings.calendar.hourly.fromHour = Number(e.target.value);
+      save();
+    });
+
     for (const card of $$(".provider")) {
       const p = card.dataset.provider;
       card.querySelector('[data-act="connect"]').addEventListener("click", (e) => act(e.target, { type: "connect", provider: p }));
@@ -278,6 +293,9 @@
     for (const cb of $$("#reminders input")) cb.checked = c.reminders.includes(Number(cb.value));
     $("#event-min").value = String(c.eventMinutes);
     $("#auto-sync").checked = c.autoSync;
+    $("#hourly-enabled").checked = c.hourly.enabled;
+    $("#hourly-from").value = String(c.hourly.fromHour);
+    $("#hourly-from").disabled = !c.hourly.enabled;
   }
 
   const timeFmt = new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" });

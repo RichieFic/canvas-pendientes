@@ -52,7 +52,11 @@ const CPT_DEFAULTS = {
     // Colores de la gráfica y la barra de progreso
     chartColors: { ...CPT_PRESETS.contraste.chart },
   },
-  calendar: { reminders: [1440, 60], eventMinutes: 30, autoSync: true },
+  calendar: {
+    reminders: [1440, 60], eventMinutes: 30, autoSync: true,
+    // El día de la entrega: un aviso cada hora en punto desde `fromHour` hasta la hora límite
+    hourly: { enabled: true, fromHour: 13 },
+  },
 };
 
 // Solo los colores del tema (sin nombre ni colores de gráfica)

@@ -275,6 +275,78 @@ function buildEvent(p, it, cal) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Avisos cada hora el día de la entrega
+// ---------------------------------------------------------------------------
+// Horas en punto del día de la entrega, desde `fromHour`, antes de la hora límite.
+function hourlyTimes(dueIso, fromHour) {
+  const due = new Date(dueIso);
+  const from = Math.min(23, Math.max(0, Math.round(Number(fromHour))));
+  const out = [];
+  for (let h = Number.isFinite(from) ? from : 13; h <= 23; h++) {
+    const t = new Date(due);
+    t.setHours(h, 0, 0, 0);
+    if (t < due) out.push(t);
+  }
+  return out;
+}
+
+// Google permite máx. 5 avisos por evento y Outlook solo 1, así que los avisos
+// se reparten en eventos cortos "⏰": cada uno se ubica en la última hora de
+// su grupo y avisa 0, 60, 120… minutos antes.
+function buildHourlyEvent(p, it, at, group) {
+  const end = new Date(at.getTime() + 15 * 60_000);
+  const time = new Intl.DateTimeFormat("es-MX", { hour: "2-digit", minute: "2-digit" }).format(new Date(it.due));
+  const summary = `⏰ Hoy vence a las ${time}: ${it.title}`;
+  const isHttp = /^https?:\/\//.test(it.url || "");
+
+  if (p === "google") {
+    const lines = ["Aviso de cada hora de Canvas Pendientes.", `Curso: ${it.course}`];
+    if (isHttp) lines.push("", `Abrir en Canvas: ${it.url}`);
+    return {
+      summary,
+      description: lines.join("\n"),
+      start: { dateTime: at.toISOString() },
+      end: { dateTime: end.toISOString() },
+      transparency: "transparent",
+      reminders: {
+        useDefault: false,
+        overrides: group.map((t) => ({ method: "popup", minutes: Math.round((at - t) / 60_000) })),
+      },
+      ...(isHttp ? { source: { title: "Canvas", url: it.url } } : {}),
+    };
+  }
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  return {
+    subject: summary,
+    body: {
+      contentType: "HTML",
+      content: `<p><b>Curso:</b> ${esc(it.course)}</p>${isHttp ? `<p><a href="${esc(it.url)}">Abrir en Canvas</a></p>` : ""}`,
+    },
+    start: { dateTime: at.toISOString().slice(0, 19), timeZone: "UTC" },
+    end: { dateTime: end.toISOString().slice(0, 19), timeZone: "UTC" },
+    showAs: "free",
+    isReminderOn: true,
+    reminderMinutesBeforeStart: 0,
+  };
+}
+
+// Evento principal + eventos de aviso por hora. Las claves de los avisos
+// derivan de la entrega, así que se borran junto con ella al completarla.
+function buildEvents(p, it, cal) {
+  const out = [{ key: it.key, ev: buildEvent(p, it, cal) }];
+  const hourly = cal.hourly || {};
+  if (!hourly.enabled) return out;
+  const times = hourlyTimes(it.due, hourly.fromHour);
+  const size = p === "google" ? 5 : 1;
+  for (let i = 0; i < times.length; i += size) {
+    const group = times.slice(i, i + size);
+    const at = group[group.length - 1];
+    out.push({ key: `${it.key}#h${at.getHours()}`, ev: buildHourlyEvent(p, it, at, group) });
+  }
+  return out;
+}
+
 async function syncProvider(p, items, settings) {
   const st = await ensureCalendar(p);
   const map = st.map || (st.map = {});
@@ -284,25 +356,26 @@ async function syncProvider(p, items, settings) {
 
   try {
     for (const it of items) {
-      seen.add(it.key);
-      const ev = buildEvent(p, it, settings.calendar);
-      const h = hash(JSON.stringify(ev));
-      const cur = map[it.key];
-      if (cur && cur.h === h) continue;
+      for (const { key, ev } of buildEvents(p, it, settings.calendar)) {
+        seen.add(key);
+        const h = hash(JSON.stringify(ev));
+        const cur = map[key];
+        if (cur && cur.h === h) continue;
 
-      if (cur) {
-        try {
-          await api(p, "PATCH", `${path}/${enc(cur.id)}`, ev);
-          map[it.key] = { id: cur.id, h, due: it.due };
-          result.updated++;
-          continue;
-        } catch (e) {
-          if (![404, 410].includes(e.status)) throw e;
+        if (cur) {
+          try {
+            await api(p, "PATCH", `${path}/${enc(cur.id)}`, ev);
+            map[key] = { id: cur.id, h, due: it.due };
+            result.updated++;
+            continue;
+          } catch (e) {
+            if (![404, 410].includes(e.status)) throw e;
+          }
         }
+        const created = await api(p, "POST", path, ev);
+        map[key] = { id: created.id, h, due: it.due };
+        result.created++;
       }
-      const created = await api(p, "POST", path, ev);
-      map[it.key] = { id: created.id, h, due: it.due };
-      result.created++;
     }
 
     // Lo que ya no está pendiente: si la fecha aún no pasa, se completó → borrar.
