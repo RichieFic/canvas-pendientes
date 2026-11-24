@@ -125,6 +125,8 @@ input[type="color"] {
 .btn:disabled { opacity: .6; cursor: progress; }
 .btn.ghost { background: transparent; color: var(--accent); }
 
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* Proveedores */
 .providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
 .provider { border: 1px solid var(--line); border-radius: 12px; padding: 14px; }

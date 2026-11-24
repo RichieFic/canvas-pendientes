@@ -56,7 +56,8 @@
     return typeof location !== "undefined" ? location.origin : "";
   }
 
-  async function loadItems(origin) {
+  // Todos los ítems del planner (incluye completados), con fecha.
+  async function loadPlanner(origin) {
     const now = Date.now();
     const start = new Date(now - DAYS_BACK * 864e5).toISOString();
     const end = new Date(now + DAYS_AHEAD * 864e5).toISOString();
@@ -75,6 +76,7 @@
         try { if (url && base) url = new URL(url, base).href; } catch { /* deja la URL tal cual */ }
         return {
           key: `${it.plannable_type}_${it.plannable_id || p.id}`,
+          kind: it.plannable_type,
           title: p.title || p.name || "(sin título)",
           course: it.context_name || "",
           type: TYPES[it.plannable_type] || it.plannable_type,
@@ -87,8 +89,18 @@
           points: p.points_possible,
         };
       })
-      .filter((x) => x.due && !isNaN(x.due) && !x.done && (x.due.getTime() >= now || x.missing))
+      .filter((x) => x.due && !isNaN(x.due))
       .sort((a, b) => a.due - b.due);
+  }
+
+  // Solo pendientes: no completados y futuros (o marcados como faltantes).
+  function pendingOnly(all) {
+    const now = Date.now();
+    return all.filter((x) => !x.done && (x.due.getTime() >= now || x.missing));
+  }
+
+  async function loadItems(origin) {
+    return pendingOnly(await loadPlanner(origin));
   }
 
   async function loadCourses(origin) {
@@ -165,6 +177,8 @@
     TYPES,
     fetchAll,
     loadItems,
+    loadPlanner,
+    pendingOnly,
     loadCourses,
     loadAnnouncements,
     serializeItems,

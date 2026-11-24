@@ -58,7 +58,11 @@
           </div>
         </div>
 
-        <button type="button" class="btn ghost" id="theme-reset">Restaurar colores</button>
+        <div class="btn-row">
+          <button type="button" class="btn" id="theme-reset-preset">Restablecer colores del tema</button>
+          <button type="button" class="btn ghost" id="theme-reset">Restaurar todo</button>
+        </div>
+        <p class="hint small" id="preset-note"></p>
       </div>
     </section>
 
@@ -70,6 +74,7 @@
       </div>
       <p class="hint">Agrega un resumen arriba de tus cursos en el panel de control de Canvas.</p>
       <div id="dash-body">
+        <label class="check"><input type="checkbox" id="dash-progress"> Progreso de hoy y gráfica de la semana</label>
         <label class="check"><input type="checkbox" id="dash-ann"> Últimos anuncios</label>
         <div class="row indent">
           <label for="dash-ann-count">Cuántos anuncios</label>
@@ -81,6 +86,9 @@
           <input type="number" id="dash-up-days" min="1" max="60">
         </div>
       </div>
+      <h3>Ocultar secciones de Canvas</h3>
+      <p class="hint small">Quita estas secciones del tablero de Canvas.</p>
+      <div class="reminders" id="hide-widgets"></div>
     </section>
 
     <!-- Calendario -->

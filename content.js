@@ -8,17 +8,20 @@
   const PROVIDER_LABEL = { google: "Google Calendar", microsoft: "Outlook" };
 
   // ---------- Datos compartidos (panel + dashboard) ----------
-  let itemsPromise = null;
-  CPT.getItems = (force = false) => {
-    if (force || !itemsPromise) {
-      itemsPromise = CPT.loadItems().then((items) => {
-        sendToBackground(items);
-        return items;
+  // Planner completo (incluye completados): lo usa la barra de progreso.
+  let plannerPromise = null;
+  CPT.getPlanner = (force = false) => {
+    if (force || !plannerPromise) {
+      plannerPromise = CPT.loadPlanner().then((all) => {
+        sendToBackground(CPT.pendingOnly(all));
+        return all;
       });
-      itemsPromise.catch(() => { itemsPromise = null; });
+      plannerPromise.catch(() => { plannerPromise = null; });
     }
-    return itemsPromise;
+    return plannerPromise;
   };
+  // Solo pendientes: panel, contador y próximas entregas.
+  CPT.getItems = (force = false) => CPT.getPlanner(force).then(CPT.pendingOnly);
 
   function send(msg) {
     try {

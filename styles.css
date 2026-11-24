@@ -8,6 +8,7 @@
   --_hover: color-mix(in srgb, var(--_accent) 8%, var(--_bg));
   --_chip: color-mix(in srgb, var(--_accent) 14%, var(--_bg));
   --_late: #c4161c;
+  --_ok: #1f9d55;
 }
 
 /* ---------- Botón flotante ---------- */
@@ -100,6 +101,60 @@
   color: var(--_text) !important;
 }
 .cpt-dash-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- Progreso de hoy ---------- */
+.cpt-dash .cpt-progress { grid-column: 1 / -1; }
+.cpt-prog-body {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px 32px;
+  align-items: start; padding-bottom: 6px;
+}
+.cpt-prog-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.cpt-prog-pct { font-size: 34px; font-weight: 800; line-height: 1.1; color: var(--_accent); }
+.cpt-prog-label { color: var(--_muted); }
+.cpt-bar {
+  height: 12px; border-radius: 6px; margin: 10px 0 12px; overflow: hidden;
+  background: color-mix(in srgb, var(--_text) 10%, var(--_bg));
+}
+.cpt-bar-fill {
+  height: 100%; border-radius: 6px; background: var(--_accent);
+  transition: width .6s ease;
+}
+.cpt-bar-fill.cpt-full { background: var(--_ok); }
+.cpt-today-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.cpt-today-list li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cpt-today-list a {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: inherit !important; text-decoration: none !important; font-weight: 600;
+}
+.cpt-today-list a:hover { text-decoration: underline !important; }
+.cpt-check {
+  flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 12px; font-weight: 800; border: 2px solid var(--_line); color: var(--_muted);
+}
+.cpt-today-list .cpt-done .cpt-check { background: var(--_ok); border-color: var(--_ok); color: #fff; }
+.cpt-today-list .cpt-done a { text-decoration: line-through !important; opacity: .65; font-weight: 400; }
+.cpt-today-list .cpt-late .cpt-check { border-color: var(--_late); }
+.cpt-time { flex: none; font-size: 12px; color: var(--_muted); }
+
+.cpt-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.cpt-week-head span { font-size: 12px; color: var(--_muted); }
+.cpt-chart { display: flex; gap: 8px; height: 150px; margin-top: 10px; }
+.cpt-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.cpt-chart-num { font-size: 11px; color: var(--_muted); height: 14px; }
+.cpt-chart-track {
+  flex: 1; width: 100%; max-width: 36px; display: flex; flex-direction: column-reverse;
+  border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--_text) 6%, var(--_bg));
+}
+.cpt-seg { width: 100%; }
+.cpt-seg-done { background: var(--_ok); }
+.cpt-seg-pending { background: color-mix(in srgb, var(--_accent) 55%, var(--_bg)); }
+.cpt-seg-late { background: var(--_late); }
+.cpt-chart-day { font-size: 11px; color: var(--_muted); white-space: nowrap; text-transform: capitalize; }
+.cpt-today .cpt-chart-day { color: var(--_accent); font-weight: 700; }
+.cpt-today .cpt-chart-track { outline: 2px solid color-mix(in srgb, var(--_accent) 45%, transparent); outline-offset: 1px; }
+.cpt-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--_muted); }
+.cpt-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.cpt-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
 .cpt-ann {
   display: block; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--_line);

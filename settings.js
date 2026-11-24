@@ -18,6 +18,14 @@ const CPT_FONTS = {
   mono:      { label: "Monoespaciada", stack: 'Consolas, "Courier New", monospace' },
 };
 
+// Widgets del tablero nuevo de Canvas (data-testid="widget-container-<id>")
+const CPT_CANVAS_WIDGETS = [
+  { id: "course-work-combined-widget", label: "Trabajo del curso" },
+  { id: "course-grades-widget",        label: "Calificaciones del curso" },
+  { id: "announcements-widget",        label: "Anuncios" },
+  { id: "people-widget",               label: "Personas" },
+];
+
 // Minutos antes de la fecha límite
 const CPT_REMINDER_OPTIONS = [
   { minutes: 10080, label: "1 semana antes" },
@@ -29,8 +37,12 @@ const CPT_REMINDER_OPTIONS = [
 ];
 
 const CPT_DEFAULTS = {
-  theme: { enabled: false, preset: "tec", ...stripLabel(CPT_PRESETS.tec), fontSize: 100, fontFamily: "" },
-  dashboard: { enabled: true, announcements: true, upcoming: true, annCount: 5, upcomingDays: 7 },
+  // preset = tema base elegido; customized = el usuario cambió algún color a mano
+  theme: { enabled: false, preset: "tec", customized: false, ...stripLabel(CPT_PRESETS.tec), fontSize: 100, fontFamily: "" },
+  dashboard: {
+    enabled: true, progress: true, announcements: true, upcoming: true, annCount: 5, upcomingDays: 7,
+    hideWidgets: ["people-widget"],
+  },
   calendar: { reminders: [1440, 60], eventMinutes: 30, autoSync: true },
 };
 

@@ -30,11 +30,31 @@
     );
   }
 
+  // Ajustes guardados por versiones anteriores usaban preset "custom".
+  const basePreset = () => (CPT_PRESETS[settings.theme.preset] ? settings.theme.preset : "tec");
+
+  function presetColors(key) {
+    const { label, ...colors } = CPT_PRESETS[key];
+    return colors;
+  }
+
   function renderTheme() {
     const t = settings.theme;
+    const base = basePreset();
     $("#theme-enabled").checked = t.enabled;
     $("#theme-body").classList.toggle("disabled", !t.enabled);
-    $("#preset").value = CPT_PRESETS[t.preset] ? t.preset : "custom";
+    // El selector muestra el tema base; si se editó, lo indica.
+    for (const o of $("#preset").options) {
+      const p = CPT_PRESETS[o.value];
+      o.textContent = p.label + (o.value === base && t.customized ? " (modificado)" : "");
+    }
+    $("#preset").value = base;
+    const resetBtn = $("#theme-reset-preset");
+    resetBtn.textContent = `Restablecer colores de “${CPT_PRESETS[base].label}”`;
+    resetBtn.disabled = !t.customized;
+    $("#preset-note").textContent = t.customized
+      ? `Cambiaste colores del tema “${CPT_PRESETS[base].label}”. El botón regresa a sus colores originales (la letra no cambia).`
+      : "";
     for (const inp of $$("[data-color]")) inp.value = t[inp.dataset.color];
     $("#font-size").value = t.fontSize;
     $("#font-size-out").textContent = `${t.fontSize}%`;
@@ -52,10 +72,7 @@
   }
 
   function initTheme() {
-    fillSelect($("#preset"), [
-      ...Object.entries(CPT_PRESETS).map(([k, p]) => [k, p.label]),
-      ["custom", "Personalizado"],
-    ]);
+    fillSelect($("#preset"), Object.entries(CPT_PRESETS).map(([k, p]) => [k, p.label]));
     fillSelect($("#font-family"), Object.entries(CPT_FONTS).map(([k, f]) => [k, f.label]));
 
     $("#theme-enabled").addEventListener("change", (e) => {
@@ -64,24 +81,32 @@
       save();
     });
     $("#preset").addEventListener("change", (e) => {
-      const p = CPT_PRESETS[e.target.value];
+      if (!CPT_PRESETS[e.target.value]) return;
       settings.theme.preset = e.target.value;
-      if (p) {
-        const { label, ...colors } = p;
-        Object.assign(settings.theme, colors);
-      }
+      settings.theme.customized = false;
+      Object.assign(settings.theme, presetColors(e.target.value));
       renderTheme();
       save();
     });
     for (const inp of $$("[data-color]")) {
       inp.addEventListener("input", () => {
         settings.theme[inp.dataset.color] = inp.value;
-        settings.theme.preset = "custom";
-        $("#preset").value = "custom";
-        renderPreview();
+        settings.theme.preset = basePreset();
+        const orig = presetColors(settings.theme.preset);
+        settings.theme.customized = Object.keys(orig).some(
+          (k) => String(settings.theme[k]).toLowerCase() !== orig[k].toLowerCase()
+        );
+        renderTheme();
         save();
       });
     }
+    $("#theme-reset-preset").addEventListener("click", () => {
+      settings.theme.preset = basePreset();
+      Object.assign(settings.theme, presetColors(settings.theme.preset));
+      settings.theme.customized = false;
+      renderTheme();
+      save();
+    });
     $("#font-size").addEventListener("input", (e) => {
       settings.theme.fontSize = Number(e.target.value);
       $("#font-size-out").textContent = `${e.target.value}%`;
@@ -105,6 +130,8 @@
     const d = settings.dashboard;
     $("#dash-enabled").checked = d.enabled;
     $("#dash-body").classList.toggle("disabled", !d.enabled);
+    $("#dash-progress").checked = d.progress;
+    for (const cb of $$("#hide-widgets input")) cb.checked = d.hideWidgets.includes(cb.value);
     $("#dash-ann").checked = d.announcements;
     $("#dash-ann-count").value = d.annCount;
     $("#dash-up").checked = d.upcoming;
@@ -120,6 +147,22 @@
       });
     const num = (min, max) => (t) => Math.min(max, Math.max(min, Math.round(Number(t.value)) || min));
     bind("#dash-enabled", "enabled", (t) => t.checked);
+    bind("#dash-progress", "progress", (t) => t.checked);
+
+    const box = $("#hide-widgets");
+    for (const w of CPT_CANVAS_WIDGETS) {
+      const label = document.createElement("label");
+      label.className = "check";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = w.id;
+      cb.addEventListener("change", () => {
+        settings.dashboard.hideWidgets = $$("#hide-widgets input:checked").map((x) => x.value);
+        save();
+      });
+      label.append(cb, document.createTextNode(` ${w.label}`));
+      box.append(label);
+    }
     bind("#dash-ann", "announcements", (t) => t.checked);
     bind("#dash-up", "upcoming", (t) => t.checked);
     bind("#dash-ann-count", "annCount", num(1, 20));

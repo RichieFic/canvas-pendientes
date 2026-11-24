@@ -41,7 +41,7 @@ html, body, #application, #wrapper, #main, #not_right_side,
 }
 
 /* Enlaces / acento */
-#content a:not([class*="Button"]):not(.btn):not(.ic-DashboardCard__link):not(.cpt-item):not(.cpt-ann),
+#content a:not([class*="Button"]):not(.btn):not(.ic-DashboardCard__link):not(.cpt-dash *),
 #right-side a:not([class*="Button"]):not(.btn),
 #left-side a, .ic-app-crumbs a, .ic-DashboardCard__header-title {
   color: ${t.accent} !important;
@@ -214,7 +214,26 @@ ${ff ? `body, #content :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label, a, butt
     if (revert) revertRecolor();
   }
 
+  // ---------- Ocultar widgets del tablero de Canvas ----------
+  let hideEl = null;
+  function applyHidden(dash) {
+    const valid = new Set(CPT_CANVAS_WIDGETS.map((w) => w.id));
+    const ids = (dash && Array.isArray(dash.hideWidgets) ? dash.hideWidgets : []).filter((id) => valid.has(id));
+    if (!ids.length) {
+      if (hideEl) hideEl.remove();
+      hideEl = null;
+      return;
+    }
+    if (!hideEl) {
+      hideEl = document.createElement("style");
+      hideEl.id = "cpt-hide-widgets";
+    }
+    hideEl.textContent = `${ids.map((id) => `[data-testid="widget-container-${id}"]`).join(",\n")} { display: none !important; }`;
+    (document.head || document.documentElement).append(hideEl);
+  }
+
   function apply(settings) {
+    applyHidden(settings.dashboard);
     const t = settings.theme;
     if (!t || !t.enabled) {
       if (styleEl) styleEl.remove();
