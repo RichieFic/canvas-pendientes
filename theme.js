@@ -14,6 +14,7 @@
 
     return `
 :root {
+  color-scheme: ${lum(hexRgb(t.text)) > 0.55 ? "dark" : "light"};
   --cpt-accent: ${t.accent};
   --cpt-ui-bg: ${t.card};
   --cpt-ui-text: ${t.text};
@@ -143,7 +144,7 @@ ${ff ? `body, #content :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label, a, butt
       const bg = parseColor(getComputedStyle(n).backgroundColor);
       if (bg && bg.a > 0.5) return lum(bg) < 0.5;
     }
-    return active.dark;
+    return active.bgDark;
   }
 
   function fixElement(e) {
@@ -202,8 +203,12 @@ ${ff ? `body, #content :is(h1, h2, h3, h4, h5, h6, p, li, td, th, label, a, butt
     active = {
       card: t.card,
       text: t.text,
-      muted: `color-mix(in srgb, ${t.text} 72%, ${t.bg})`,
-      dark: lum(hexRgb(t.bg)) < 0.45,
+      muted: `color-mix(in srgb, ${t.text} 72%, ${t.card})`,
+      // Texto claro = superficies oscuras: hay que aclarar el texto oscuro de
+      // Canvas que quede sobre fondo oscuro. (No depende solo de "Fondo":
+      // con fondo blanco y tarjetas oscuras, los blancos se vuelven oscuros.)
+      dark: lum(hexRgb(t.text)) > 0.55,
+      bgDark: lum(hexRgb(t.bg)) < 0.45,
       recolorBg: lum(card) < 0.97, // con tarjetas blancas no hace falta
     };
     if (!active.recolorBg && !active.dark) return stopRecolor(false);
